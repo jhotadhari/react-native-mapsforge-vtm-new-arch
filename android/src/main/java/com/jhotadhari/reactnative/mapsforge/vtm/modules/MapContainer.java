@@ -1,4 +1,4 @@
-package com.jhotadhari.reactnative.mapsforge.vtm;
+package com.jhotadhari.reactnative.mapsforge.vtm.modules;
 
 import androidx.annotation.NonNull;
 
@@ -7,15 +7,16 @@ import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableNativeArray;
 import com.facebook.react.bridge.WritableNativeMap;
+import com.jhotadhari.reactnative.mapsforge.vtm.NativeMapContainerSpec;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class MapContainerModule extends NativeMapContainerSpec {
+public class MapContainer extends NativeMapContainerSpec {
 
 	public static final String NAME = "MapContainer";
 
-	public MapContainerModule( ReactApplicationContext reactContext ) {
+	public MapContainer( ReactApplicationContext reactContext ) {
 		super( reactContext );
 	}
 

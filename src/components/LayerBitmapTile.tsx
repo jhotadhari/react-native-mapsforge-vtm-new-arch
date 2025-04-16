@@ -6,12 +6,12 @@ import { useEffect, useState } from 'react';
 /**
  * Internal dependencies
  */
-import MapLayerBitmapTileModule, {
+import LayerBitmapTileModule, {
     type CreateLayerParams,
-} from '../NativeModules/NativeMapLayerBitmapTile';
+} from '../NativeModules/NativeLayerBitmapTile';
 import type { ErrorBase, ResponseBase } from '../types';
 
-const Module = MapLayerBitmapTileModule;
+const Module = LayerBitmapTileModule;
 
 export type LayerBitmapTileProps = {
 	nativeNodeHandle?: CreateLayerParams['nativeNodeHandle'];

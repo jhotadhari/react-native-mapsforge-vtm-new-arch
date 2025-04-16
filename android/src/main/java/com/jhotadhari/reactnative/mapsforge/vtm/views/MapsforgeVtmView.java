@@ -1,8 +1,7 @@
-package com.jhotadhari.reactnative.mapsforge.vtm;
+package com.jhotadhari.reactnative.mapsforge.vtm.views;
 
 import android.annotation.SuppressLint;
 import android.net.Uri;
-import android.util.Log;
 import android.view.Choreographer;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,21 +12,20 @@ import androidx.annotation.Nullable;
 import androidx.documentfile.provider.DocumentFile;
 import androidx.fragment.app.FragmentActivity;
 
-import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.uimanager.ThemedReactContext;
 import com.facebook.react.uimanager.UIManagerHelper;
 import com.facebook.react.uimanager.events.Event;
 import com.facebook.react.uimanager.events.EventDispatcher;
+import com.jhotadhari.reactnative.mapsforge.vtm.HgtReader;
+import com.jhotadhari.reactnative.mapsforge.vtm.Utils;
 
 import org.mapsforge.map.android.hills.DemFolderAndroidContent;
 import org.mapsforge.map.layer.hills.DemFolder;
 import org.mapsforge.map.layer.hills.DemFolderFS;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 
 @SuppressLint( "ViewConstructor" )
 public class MapsforgeVtmView extends LinearLayout {

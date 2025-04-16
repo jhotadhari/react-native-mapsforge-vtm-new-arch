@@ -45,4 +45,4 @@ export interface Spec extends TurboModule {
 	setAlpha( params: SetAlphaParams ): Promise<string>;
 };
 
-export default TurboModuleRegistry.getEnforcing<Spec>( 'MapLayerBitmapTile' );
+export default TurboModuleRegistry.getEnforcing<Spec>( 'LayerBitmapTile' );

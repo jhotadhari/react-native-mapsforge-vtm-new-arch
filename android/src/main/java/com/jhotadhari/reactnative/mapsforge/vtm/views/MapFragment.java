@@ -1,4 +1,4 @@
-package com.jhotadhari.reactnative.mapsforge.vtm;
+package com.jhotadhari.reactnative.mapsforge.vtm.views;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -12,6 +12,8 @@ import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableNativeMap;
+import com.jhotadhari.reactnative.mapsforge.vtm.FixedWindowRateLimiter;
+import com.jhotadhari.reactnative.mapsforge.vtm.R;
 
 import org.oscim.android.MapView;
 import org.oscim.core.MapPosition;

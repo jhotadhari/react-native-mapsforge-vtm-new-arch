@@ -1,4 +1,4 @@
-package com.jhotadhari.reactnative.mapsforge.vtm;
+package com.jhotadhari.reactnative.mapsforge.vtm.modules;
 
 import androidx.annotation.NonNull;
 
@@ -6,6 +6,9 @@ import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.module.annotations.ReactModule;
+import com.jhotadhari.reactnative.mapsforge.vtm.LayerZoomBoundsHelper;
+import com.jhotadhari.reactnative.mapsforge.vtm.NativeLayerBitmapTileSpec;
+import com.jhotadhari.reactnative.mapsforge.vtm.Utils;
 
 import org.oscim.android.MapView;
 import org.oscim.layers.tile.bitmap.BitmapTileLayer;
@@ -21,14 +24,14 @@ import java.util.Map;
 import okhttp3.Cache;
 import okhttp3.OkHttpClient;
 
-@ReactModule(name = MapLayerBitmapTileModule.NAME)
-public class MapLayerBitmapTileModule extends NativeMapLayerBitmapTileSpec {
+@ReactModule(name = LayerBitmapTile.NAME)
+public class LayerBitmapTile extends NativeLayerBitmapTileSpec {
 
-	public static final String NAME = "MapLayerBitmapTile";
+	public static final String NAME = "LayerBitmapTile";
 
 	private final LayerZoomBoundsHelper layerHelper;
 
-	public MapLayerBitmapTileModule(ReactApplicationContext reactContext) {
+	public LayerBitmapTile(ReactApplicationContext reactContext) {
 		super(reactContext);
 		layerHelper = new LayerZoomBoundsHelper( this, this.getReactApplicationContext() );
 	}

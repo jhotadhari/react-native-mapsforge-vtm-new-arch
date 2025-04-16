@@ -8,6 +8,9 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.module.model.ReactModuleInfo;
 import com.facebook.react.module.model.ReactModuleInfoProvider;
 import com.facebook.react.uimanager.ViewManager;
+import com.jhotadhari.reactnative.mapsforge.vtm.modules.MapContainer;
+import com.jhotadhari.reactnative.mapsforge.vtm.modules.LayerBitmapTile;
+import com.jhotadhari.reactnative.mapsforge.vtm.views.MapsforgeVtmViewManager;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,11 +29,11 @@ public class MapsforgeVtmViewPackage extends BaseReactPackage {
 
 	@Override
 	public NativeModule getModule( @NonNull String s, @NonNull ReactApplicationContext reactApplicationContext ) {
-		if ( MapContainerModule.NAME.equals( s ) ) {
-			return new MapContainerModule( reactApplicationContext );
+		if ( MapContainer.NAME.equals( s ) ) {
+			return new MapContainer( reactApplicationContext );
 		}
-		if ( MapLayerBitmapTileModule.NAME.equals( s ) ) {
-			return new MapLayerBitmapTileModule( reactApplicationContext );
+		if ( LayerBitmapTile.NAME.equals( s ) ) {
+			return new LayerBitmapTile( reactApplicationContext );
 		}
 		return null;
 	}
@@ -44,24 +47,24 @@ public class MapsforgeVtmViewPackage extends BaseReactPackage {
 			public Map<String, ReactModuleInfo> getReactModuleInfos() {
 				Map<String, ReactModuleInfo> map = new HashMap<>();
 				map.put( MapsforgeVtmViewManager.NAME, new ReactModuleInfo(
-					MapsforgeVtmViewManager.NAME, 			// name
-					MapsforgeVtmViewManager.NAME, 			// className
+					MapsforgeVtmViewManager.NAME, 	// name
+					MapsforgeVtmViewManager.NAME, 	// className
 					false,							// canOverrideExistingModule
 					false,							// needsEagerInit
 					false,							// isCxxModule
 					true							// isTurboModule
 				) );
-				map.put( MapContainerModule.NAME, new ReactModuleInfo(
-					MapContainerModule.NAME,		// name
-					MapContainerModule.NAME,		// className
+				map.put( MapContainer.NAME, new ReactModuleInfo(
+					MapContainer.NAME,				// name
+					MapContainer.NAME,				// className
 					false,							// canOverrideExistingModule
 					false,							// needsEagerInit
 					false,							// isCxxModule
 					true							// isTurboModule
 				) );
-				map.put( MapLayerBitmapTileModule.NAME, new ReactModuleInfo(
-					MapLayerBitmapTileModule.NAME,	// name
-					MapLayerBitmapTileModule.NAME,	// className
+				map.put( LayerBitmapTile.NAME, new ReactModuleInfo(
+					LayerBitmapTile.NAME,			// name
+					LayerBitmapTile.NAME,			// className
 					false,							// canOverrideExistingModule
 					false,							// needsEagerInit
 					false,							// isCxxModule
