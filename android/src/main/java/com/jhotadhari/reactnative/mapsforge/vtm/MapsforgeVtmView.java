@@ -30,7 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @SuppressLint( "ViewConstructor" )
-public class MapFragmentView extends LinearLayout {
+public class MapsforgeVtmView extends LinearLayout {
 
 	private MapFragment mapFragment;
 
@@ -63,7 +63,7 @@ public class MapFragmentView extends LinearLayout {
 	private int mapEventRate;
 	private boolean emitsMapUpdateEvents;
 
-	public MapFragmentView( ThemedReactContext context ) { super(context); }
+	public MapsforgeVtmView( ThemedReactContext context ) { super(context); }
 
 	@Override
 	public void onLayout( boolean changed, int l, int t, int r, int b ) {
