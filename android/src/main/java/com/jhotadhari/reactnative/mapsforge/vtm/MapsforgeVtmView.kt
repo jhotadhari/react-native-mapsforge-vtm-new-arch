@@ -1,4 +1,4 @@
-package com.mapsforgevtm
+package com.jhotadhari.reactnative.mapsforge.vtm
 
 import android.content.Context
 import android.util.AttributeSet

@@ -36,7 +36,7 @@ def supportsNamespace() {
 
 android {
   if (supportsNamespace()) {
-    namespace "com.mapsforgevtm"
+    namespace "com.jhotadhari.reactnative.mapsforge.vtm"
 
     sourceSets {
       main {
@@ -96,5 +96,5 @@ dependencies {
 react {
   jsRootDir = file("../src/")
   libraryName = "MapsforgeVtmView"
-  codegenJavaPackageName = "com.mapsforgevtm"
+  codegenJavaPackageName = "com.jhotadhari.reactnative.mapsforge.vtm"
 }
