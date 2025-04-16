@@ -3,7 +3,7 @@ export * from './NativeViews/MapsforgeVtmViewNativeComponent';
 
 import MapContainer from './components/MapContainer';
 // import LayerMapsforge from './components/LayerMapsforge';
-// import LayerBitmapTile from './components/LayerBitmapTile';
+import LayerBitmapTile from './components/LayerBitmapTile';
 // import LayerHillshading from './components/LayerHillshading';
 // import LayerMBTilesBitmap from './components/LayerMBTilesBitmap';
 // import LayerScalebar from './components/LayerScalebar';
@@ -19,7 +19,7 @@ import MapContainer from './components/MapContainer';
 export {
 	MapContainer,
 	// LayerMapsforge,
-	// LayerBitmapTile,
+	LayerBitmapTile,
 	// LayerHillshading,
 	// LayerMBTilesBitmap,
 	// LayerScalebar,

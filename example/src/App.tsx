@@ -8,7 +8,7 @@ import {
   Text,
 } from 'react-native';
 import {
-  // LayerBitmapTile,
+  LayerBitmapTile,
   MapContainer,
   type Location,
   type MapError,
@@ -71,7 +71,7 @@ export default function App() {
           console.log( 'debug onError', response?.nativeEvent ); // debug
         } }
       >
-        {/* <LayerBitmapTile/> */}
+        <LayerBitmapTile/>
       </MapContainer>
 
       <Text style={ {color: '#ffffff'} }>bla</Text>

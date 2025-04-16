@@ -29,9 +29,9 @@ public class MapsforgeVtmViewPackage extends BaseReactPackage {
 		if ( MapContainerModule.NAME.equals( s ) ) {
 			return new MapContainerModule( reactApplicationContext );
 		}
-		// if ( MapLayerBitmapTileModule.NAME.equals( s ) ) {
-		// 	return new MapLayerBitmapTileModule( reactApplicationContext );
-		// }
+		if ( MapLayerBitmapTileModule.NAME.equals( s ) ) {
+			return new MapLayerBitmapTileModule( reactApplicationContext );
+		}
 		return null;
 	}
 
@@ -59,14 +59,14 @@ public class MapsforgeVtmViewPackage extends BaseReactPackage {
 					false,							// isCxxModule
 					true							// isTurboModule
 				) );
-				// map.put( MapLayerBitmapTileModule.NAME, new ReactModuleInfo(
-				// 	MapLayerBitmapTileModule.NAME,	// name
-				// 	MapLayerBitmapTileModule.NAME,	// className
-				// 	false,							// canOverrideExistingModule
-				// 	false,							// needsEagerInit
-				// 	false,							// isCxxModule
-				// 	true							// isTurboModule
-				// ) );
+				map.put( MapLayerBitmapTileModule.NAME, new ReactModuleInfo(
+					MapLayerBitmapTileModule.NAME,	// name
+					MapLayerBitmapTileModule.NAME,	// className
+					false,							// canOverrideExistingModule
+					false,							// needsEagerInit
+					false,							// isCxxModule
+					true							// isTurboModule
+				) );
 				return map;
 			}
 		};
