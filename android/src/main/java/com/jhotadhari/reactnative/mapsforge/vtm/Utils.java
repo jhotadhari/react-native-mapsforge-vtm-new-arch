@@ -10,6 +10,7 @@ import androidx.fragment.app.FragmentActivity;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContext;
+import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableNativeMap;
 import com.jhotadhari.reactnative.mapsforge.vtm.views.MapFragment;
@@ -134,6 +135,17 @@ public class Utils {
 		WritableMap error = new WritableNativeMap();
 		error.putString( "errorMsg", errorMsg );
 		promise.reject( "error", error );
+	}
+
+	/**
+	 * Check if the map has an entry for this key that is not null.
+	 *
+	 * @param args	ReadableMap or WritableMap
+	 * @param key	The key to check for
+	 * @return boolean
+	 */
+	public static boolean rMapHasKey( ReadableMap args, String key ) {
+		return args.hasKey( key ) && ! args.isNull( key );
 	}
 
 }

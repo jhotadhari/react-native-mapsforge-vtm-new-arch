@@ -30,7 +30,7 @@ public class LayerHelper {
 	}
 
 	public String addLayer( Layer layer, ReadableMap params ) {
-		if ( ! params.hasKey( "nativeNodeHandle" ) ) { return null; }
+		if ( ! Utils.rMapHasKey( params, "nativeNodeHandle" ) ) { return null; }
 		MapView mapView = Utils.getMapView( reactContext, params.getInt( "nativeNodeHandle" ) );
 		if ( null == mapView ) { return null; }
 
@@ -52,7 +52,7 @@ public class LayerHelper {
 
 	public void removeLayer( ReadableMap params, Promise promise ) {
 		try {
-			if ( ! params.hasKey( "uuid" ) && ! params.hasKey( "nativeNodeHandle" ) ) {
+			if ( ! Utils.rMapHasKey( params, "uuid" ) || ! Utils.rMapHasKey( params, "nativeNodeHandle" ) ) {
 				Utils.promiseReject( promise,"Undefined uuid or nativeNodeHandle" ); return;
 			}
 

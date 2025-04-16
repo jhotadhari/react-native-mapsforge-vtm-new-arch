@@ -11,8 +11,6 @@ import LayerBitmapTileModule, {
 } from '../NativeModules/NativeLayerBitmapTile';
 import type { ErrorBase, ResponseBase } from '../types';
 
-const Module = LayerBitmapTileModule;
-
 export type LayerBitmapTileProps = {
 	nativeNodeHandle?: CreateLayerParams['nativeNodeHandle'];
 	reactTreeIndex?: CreateLayerParams['reactTreeIndex'];
@@ -57,7 +55,7 @@ const LayerBitmapTile = ( {
 	const createLayer = () => {
 		setUuid( false );
         if ( nativeNodeHandle && undefined !== reactTreeIndex ) {
-            Module.createLayer( {
+            LayerBitmapTileModule.createLayer( {
                 nativeNodeHandle,
                 reactTreeIndex,
                 ...( url && { url } ),
@@ -86,7 +84,7 @@ const LayerBitmapTile = ( {
 		}
 		return () => {
 			if ( uuid && nativeNodeHandle ) {
-				Module.removeLayer( {
+				LayerBitmapTileModule.removeLayer( {
 					nativeNodeHandle,
 					uuid
 				} ).then( ( uuid: string ) => {
@@ -97,12 +95,13 @@ const LayerBitmapTile = ( {
 	}, [
 		nativeNodeHandle,
 		!! uuid,
+		triggerCreateNew,
 	] );
 
 	// enabledZoomMin enabledZoomMax changed.
 	useEffect( () => {
 		if ( nativeNodeHandle && uuid ) {
-			Module.updateEnabledZoomMinMax( {
+			LayerBitmapTileModule.updateEnabledZoomMinMax( {
 				nativeNodeHandle,
 				uuid,
                 ...( enabledZoomMin && { enabledZoomMin: Math.round( enabledZoomMin ) } ),
@@ -117,7 +116,7 @@ const LayerBitmapTile = ( {
 
 	useEffect( () => {
 		if ( nativeNodeHandle && uuid ) {
-			Module.setAlpha( {
+			LayerBitmapTileModule.setAlpha( {
 				nativeNodeHandle,
 				uuid,
                 ...( alpha && { alpha } ),	// java side will ensure it is between 0 and 1.
@@ -128,7 +127,7 @@ const LayerBitmapTile = ( {
 
 	useEffect( () => {
 		if ( nativeNodeHandle && uuid ) {
-			Module.removeLayer( {
+			LayerBitmapTileModule.removeLayer( {
 				nativeNodeHandle,
 				uuid
 			} ).then( () => {
@@ -147,8 +146,9 @@ const LayerBitmapTile = ( {
 
 	return null;
 };
+
 LayerBitmapTile.isMapLayer = true;
 
-LayerBitmapTile.defaults = Module.getConstants();
+LayerBitmapTile.defaults = LayerBitmapTileModule.getConstants();
 
 export default LayerBitmapTile;

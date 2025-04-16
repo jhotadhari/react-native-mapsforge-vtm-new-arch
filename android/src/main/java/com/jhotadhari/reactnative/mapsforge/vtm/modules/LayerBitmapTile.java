@@ -24,7 +24,7 @@ import java.util.Map;
 import okhttp3.Cache;
 import okhttp3.OkHttpClient;
 
-@ReactModule(name = LayerBitmapTile.NAME)
+@ReactModule( name = LayerBitmapTile.NAME )
 public class LayerBitmapTile extends NativeLayerBitmapTileSpec {
 
 	public static final String NAME = "LayerBitmapTile";
@@ -61,23 +61,23 @@ public class LayerBitmapTile extends NativeLayerBitmapTileSpec {
 	public void createLayer( ReadableMap params, Promise promise ) {
 		try {
 
-			if ( ! params.hasKey( "nativeNodeHandle" ) ) {
+			if ( ! Utils.rMapHasKey( params, "nativeNodeHandle" ) ) {
 				Utils.promiseReject( promise,"Undefined nativeNodeHandle" ); return;
 			}
 
 			MapView mapView = Utils.getMapView( getReactApplicationContext(), params.getInt( "nativeNodeHandle" ) );
 			if ( null == mapView ) {
-				Utils.promiseReject( promise,"Unable to find mapView or mapFragment" ); return;
+				Utils.promiseReject( promise,"Unable to find mapView" ); return;
 			}
 
 			// Get params, assign defaults.
-			String url = params.hasKey( "url" ) ? params.getString( "url" ) : (String) getConstants().get( "url"  );
-			int zoomMin = params.hasKey( "zoomMin" ) ? params.getInt( "zoomMin" ) : (int) getConstants().get( "zoomMin"  );
-			int zoomMax = params.hasKey( "zoomMax" ) ? params.getInt( "zoomMax" ) : (int) getConstants().get( "zoomMax"  );
-			double alpha = params.hasKey( "alpha" ) ? params.getDouble( "alpha" ) : (int) getConstants().get( "alpha"  );
-			int cacheSize = params.hasKey( "cacheSize" ) ? params.getInt( "cacheSize" ) : (int) getConstants().get( "cacheSize"  );
-			String cacheDirBase = params.hasKey( "cacheDirBase" ) ? params.getString( "cacheDirBase" ) : (String) getConstants().get( "cacheDirBase"  );
-			String cacheDirChild = params.hasKey( "cacheDirChild" ) ? params.getString( "cacheDirChild" ) : (String) getConstants().get( "cacheDirChild"  );
+			String url = Utils.rMapHasKey( params, "url" ) ? params.getString( "url" ) : (String) getConstants().get( "url" );
+			int zoomMin = Utils.rMapHasKey( params, "zoomMin" ) ? params.getInt( "zoomMin" ) : (int) getConstants().get( "zoomMin" );
+			int zoomMax = Utils.rMapHasKey( params, "zoomMax" ) ? params.getInt( "zoomMax" ) : (int) getConstants().get( "zoomMax" );
+			double alpha = Utils.rMapHasKey( params, "alpha" ) ? params.getDouble( "alpha" ) : (int) getConstants().get( "alpha" );
+			int cacheSize = Utils.rMapHasKey( params, "cacheSize" ) ? params.getInt( "cacheSize" ) : (int) getConstants().get( "cacheSize" );
+			String cacheDirBase = Utils.rMapHasKey( params, "cacheDirBase" ) ? params.getString( "cacheDirBase" ) : (String) getConstants().get( "cacheDirBase" );
+			String cacheDirChild = Utils.rMapHasKey( params, "cacheDirChild" ) ? params.getString( "cacheDirChild" ) : (String) getConstants().get( "cacheDirChild" );
 
 			// Define tile source.
 			url = url.length() > 0 ? url : (String) getConstants().get( "url"  );
@@ -132,7 +132,7 @@ public class LayerBitmapTile extends NativeLayerBitmapTileSpec {
 	@Override
 	public void setAlpha( ReadableMap params, Promise promise ) {
 		try {
-			if ( ! params.hasKey( "uuid" ) && ! params.hasKey( "nativeNodeHandle" ) ) {
+			if ( ! Utils.rMapHasKey( params, "uuid" ) || ! Utils.rMapHasKey( params, "nativeNodeHandle" ) ) {
 				Utils.promiseReject( promise,"Undefined uuid or nativeNodeHandle" ); return;
 			}
 			MapView mapView = Utils.getMapView( getReactApplicationContext(), params.getInt( "nativeNodeHandle" ) );
@@ -141,7 +141,7 @@ public class LayerBitmapTile extends NativeLayerBitmapTileSpec {
 			}
 
 			// Get params, assign defaults.
-			double alpha = params.hasKey( "alpha" ) ? params.getDouble( "alpha" ) : 1;
+			double alpha = Utils.rMapHasKey( params, "alpha" ) ? params.getDouble( "alpha" ) : (int) getConstants().get( "alpha" );
 
 			// Find layer
 			BitmapTileLayer bitmapTileLayer = (BitmapTileLayer) layerHelper.getLayers().get( params.getString( "uuid" ) );

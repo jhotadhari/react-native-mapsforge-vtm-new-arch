@@ -7,11 +7,13 @@ import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableNativeArray;
 import com.facebook.react.bridge.WritableNativeMap;
+import com.facebook.react.module.annotations.ReactModule;
 import com.jhotadhari.reactnative.mapsforge.vtm.NativeMapContainerSpec;
 
 import java.util.HashMap;
 import java.util.Map;
 
+@ReactModule( name = MapContainer.NAME )
 public class MapContainer extends NativeMapContainerSpec {
 
 	public static final String NAME = "MapContainer";

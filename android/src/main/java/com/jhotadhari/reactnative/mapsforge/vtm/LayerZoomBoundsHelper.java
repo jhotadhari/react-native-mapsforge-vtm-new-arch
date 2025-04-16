@@ -23,13 +23,13 @@ public class LayerZoomBoundsHelper extends LayerHelper {
 	public String addLayer( Layer layer, ReadableMap params ) {
 		String uuid = super.addLayer( layer, params );
 
-		if ( ! params.hasKey( "nativeNodeHandle" ) ) { return null; }
+		if ( ! Utils.rMapHasKey( params, "nativeNodeHandle" ) ) { return null; }
 		MapView mapView = Utils.getMapView( reactContext, params.getInt( "nativeNodeHandle" ) );
 		if ( null == mapView ) { return null; }
 
 		// Get params, assign defaults.
-		int enabledZoomMin = params.hasKey( "enabledZoomMin" ) ? params.getInt( "enabledZoomMin" ) : (int) module.getConstants().get( "enabledZoomMin"  );
-		int enabledZoomMax = params.hasKey( "enabledZoomMax" ) ? params.getInt( "enabledZoomMax" ) : (int) module.getConstants().get( "enabledZoomMax"  );
+		int enabledZoomMin = Utils.rMapHasKey( params, "enabledZoomMin" ) ? params.getInt( "enabledZoomMin" ) : (int) module.getConstants().get( "enabledZoomMin" );
+		int enabledZoomMax = Utils.rMapHasKey( params, "enabledZoomMax" ) ? params.getInt( "enabledZoomMax" ) : (int) module.getConstants().get( "enabledZoomMax" );
 
 		updateEnabled(
 			layer,
@@ -50,13 +50,13 @@ public class LayerZoomBoundsHelper extends LayerHelper {
 
 	public void updateEnabledZoomMinMax( ReadableMap params, Promise promise ) {
 		try {
-			if ( ! params.hasKey( "uuid" ) && ! params.hasKey( "nativeNodeHandle" ) ) {
+			if ( ! Utils.rMapHasKey( params, "uuid" ) || ! Utils.rMapHasKey( params, "nativeNodeHandle" ) ) {
 				Utils.promiseReject( promise,"Undefined uuid or nativeNodeHandle" ); return;
 			}
 
 			// Get params, assign defaults.
-			int enabledZoomMin = params.hasKey( "enabledZoomMin" ) ? params.getInt( "enabledZoomMin" ) : (int) module.getConstants().get( "enabledZoomMin"  );
-			int enabledZoomMax = params.hasKey( "enabledZoomMax" ) ? params.getInt( "enabledZoomMax" ) : (int) module.getConstants().get( "enabledZoomMax"  );
+			int enabledZoomMin = Utils.rMapHasKey( params, "enabledZoomMin" ) ? params.getInt( "enabledZoomMin" ) : (int) module.getConstants().get( "enabledZoomMin"  );
+			int enabledZoomMax = Utils.rMapHasKey( params, "enabledZoomMax" ) ? params.getInt( "enabledZoomMax" ) : (int) module.getConstants().get( "enabledZoomMax"  );
 
 			updateUpdateListener(
 				params.getInt( "nativeNodeHandle" ),
@@ -75,7 +75,7 @@ public class LayerZoomBoundsHelper extends LayerHelper {
 
 	@Override
 	public void removeLayer( ReadableMap params, Promise promise ) {
-		if ( ! params.hasKey( "nativeNodeHandle" ) ) {
+		if ( ! Utils.rMapHasKey( params, "nativeNodeHandle" ) ) {
 			Utils.promiseReject( promise, "Undefined nativeNodeHandle" );  return;
 		}
 		removeUpdateListener( params.getInt( "nativeNodeHandle" ) );
