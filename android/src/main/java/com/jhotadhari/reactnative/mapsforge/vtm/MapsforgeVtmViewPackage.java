@@ -26,9 +26,6 @@ public class MapsforgeVtmViewPackage extends BaseReactPackage {
 
 	@Override
 	public NativeModule getModule( @NonNull String s, @NonNull ReactApplicationContext reactApplicationContext ) {
-		// if ( MapsforgeVtmViewManager.NAME.equals( s ) ) {
-		// 	return new MapsforgeVtmViewManager();
-		// }
 		if ( MapContainerModule.NAME.equals( s ) ) {
 			return new MapContainerModule( reactApplicationContext );
 		}

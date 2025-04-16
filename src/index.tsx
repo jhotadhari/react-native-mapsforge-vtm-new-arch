@@ -1,2 +1,2 @@
-export { default as MapsforgeVtmView } from './NativeModules/MapsforgeVtmViewNativeComponent';
-export * from './NativeModules/MapsforgeVtmViewNativeComponent';
+export { default as MapsforgeVtmView } from './NativeViews/MapsforgeVtmViewNativeComponent';
+export * from './NativeViews/MapsforgeVtmViewNativeComponent';
