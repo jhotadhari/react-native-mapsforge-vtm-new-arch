@@ -20,3 +20,7 @@ export interface ErrorBase {
     };
     code?: string;
 };
+
+export interface EventError {
+    errorMsg: string;
+  };

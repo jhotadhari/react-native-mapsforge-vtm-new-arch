@@ -8,6 +8,7 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.module.model.ReactModuleInfo;
 import com.facebook.react.module.model.ReactModuleInfoProvider;
 import com.facebook.react.uimanager.ViewManager;
+import com.jhotadhari.reactnative.mapsforge.vtm.modules.LayerMarker;
 import com.jhotadhari.reactnative.mapsforge.vtm.modules.MapContainer;
 import com.jhotadhari.reactnative.mapsforge.vtm.modules.LayerBitmapTile;
 import com.jhotadhari.reactnative.mapsforge.vtm.views.MapsforgeVtmViewManager;
@@ -34,6 +35,9 @@ public class MapsforgeVtmViewPackage extends BaseReactPackage {
 		}
 		if ( LayerBitmapTile.NAME.equals( s ) ) {
 			return new LayerBitmapTile( reactApplicationContext );
+		}
+		if ( LayerMarker.NAME.equals( s ) ) {
+			return new LayerMarker( reactApplicationContext );
 		}
 		return null;
 	}
@@ -65,6 +69,14 @@ public class MapsforgeVtmViewPackage extends BaseReactPackage {
 				map.put( LayerBitmapTile.NAME, new ReactModuleInfo(
 					LayerBitmapTile.NAME,			// name
 					LayerBitmapTile.NAME,			// className
+					false,							// canOverrideExistingModule
+					false,							// needsEagerInit
+					false,							// isCxxModule
+					true							// isTurboModule
+				) );
+				map.put( LayerMarker.NAME, new ReactModuleInfo(
+					LayerMarker.NAME,				// name
+					LayerMarker.NAME,				// className
 					false,							// canOverrideExistingModule
 					false,							// needsEagerInit
 					false,							// isCxxModule

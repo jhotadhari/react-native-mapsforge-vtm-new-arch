@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import {
   LayerBitmapTile,
+  LayerMarker,
   MapContainer,
   type Location,
   type MapError,
@@ -72,6 +73,9 @@ export default function App() {
         } }
       >
         <LayerBitmapTile/>
+
+        <LayerMarker/>
+
       </MapContainer>
 
       <Text style={ {color: '#ffffff'} }>bla</Text>

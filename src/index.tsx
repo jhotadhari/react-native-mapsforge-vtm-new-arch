@@ -9,7 +9,7 @@ import LayerBitmapTile from './components/LayerBitmapTile';
 // import LayerScalebar from './components/LayerScalebar';
 // import LayerPath from './components/LayerPath';
 // import LayerPathSlopeGradient from './components/LayerPathSlopeGradient';
-// import LayerMarker from './components/LayerMarker';
+import LayerMarker from './components/LayerMarker';
 // import Marker from './components/Marker';
 // import useRenderStyleOptions from './compose/useRenderStyleOptions';
 // import usePromiseQueueState from './compose/usePromiseQueueState';
@@ -25,7 +25,7 @@ export {
 	// LayerScalebar,
 	// LayerPath,
 	// LayerPathSlopeGradient,
-	// LayerMarker,
+	LayerMarker,
 	// Marker,
 	// useRenderStyleOptions,
 	// usePromiseQueueState,
