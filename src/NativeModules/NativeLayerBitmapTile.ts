@@ -15,8 +15,8 @@ export interface ModuleParams {
 };
 
 export interface CreateLayerParams extends ModuleParams {
-	nativeNodeHandle?: Int32;
-	reactTreeIndex?: Int32;
+	nativeNodeHandle: Int32;
+	reactTreeIndex: Int32;
 };
 
 export interface RemoveLayerParams {

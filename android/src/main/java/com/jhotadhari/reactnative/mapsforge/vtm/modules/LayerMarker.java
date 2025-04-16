@@ -10,6 +10,7 @@ import androidx.documentfile.provider.DocumentFile;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableNativeMap;
@@ -25,8 +26,10 @@ import org.oscim.backend.canvas.Bitmap;
 import org.oscim.backend.canvas.Canvas;
 import org.oscim.backend.canvas.Color;
 import org.oscim.backend.canvas.Paint;
+import org.oscim.core.GeoPoint;
 import org.oscim.layers.marker.ItemizedLayer;
 import org.oscim.layers.marker.MarkerInterface;
+import org.oscim.layers.marker.MarkerItem;
 import org.oscim.layers.marker.MarkerSymbol;
 
 import java.io.File;
@@ -35,6 +38,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @ReactModule( name = LayerMarker.NAME )
 public class LayerMarker extends NativeLayerMarkerSpec {
@@ -42,6 +46,8 @@ public class LayerMarker extends NativeLayerMarkerSpec {
 	public static final String NAME = "LayerMarker";
 
 	private final LayerHelper layerHelper;
+
+	protected Map<String, MarkerItem> markers = new HashMap<>();
 
 	public LayerMarker( ReactApplicationContext reactContext) {
 		super(reactContext);
@@ -57,6 +63,7 @@ public class LayerMarker extends NativeLayerMarkerSpec {
 	@Override
 	protected Map<String, Object> getTypedExportedConstants() {
 		final Map<String, Object> constants = new HashMap<>();
+		// For layer and marker.
 		WritableMap symbol = new WritableNativeMap();
 		symbol.putDouble( "width", 30 );
 		symbol.putDouble( "height", 30 );
@@ -73,6 +80,10 @@ public class LayerMarker extends NativeLayerMarkerSpec {
 		symbol.putString( "textColor", "#111111" );
 		symbol.putInt( "textSize", 30 );
 		constants.put( "symbol", symbol );
+		// For marker.
+		constants.put( "title", "" );
+		constants.put( "description", "" );
+		constants.put( "position", null );
 		return constants;
 	}
 
@@ -82,7 +93,6 @@ public class LayerMarker extends NativeLayerMarkerSpec {
 			if ( ! Utils.rMapHasKey( params, "nativeNodeHandle" ) ) {
 				Utils.promiseReject( promise,"Undefined nativeNodeHandle" ); return;
 			}
-
 			MapView mapView = Utils.getMapView( getReactApplicationContext(), params.getInt( "nativeNodeHandle" ) );
 			MapFragment mapFragment = Utils.getMapFragment( getReactApplicationContext(), params.getInt( "nativeNodeHandle" ) );
 			if ( null == mapView || null == mapFragment ) {
@@ -142,6 +152,96 @@ public class LayerMarker extends NativeLayerMarkerSpec {
 		}
 	}
 
+	@Override
+	public void createMarker( ReadableMap params, Promise promise ) {
+		if ( ! Utils.rMapHasKey( params, "nativeNodeHandle" ) ) {
+			Utils.promiseReject( promise,"Undefined nativeNodeHandle" ); return;
+		}
+		MapView mapView = Utils.getMapView( getReactApplicationContext(), params.getInt( "nativeNodeHandle" ) );
+		MapFragment mapFragment = Utils.getMapFragment( getReactApplicationContext(), params.getInt( "nativeNodeHandle" ) );
+		if ( null == mapView || null == mapFragment ) {
+			Utils.promiseReject( promise,"Unable to find mapView or mapFragment" ); return;
+		}
+		if ( ! Utils.rMapHasKey( params, "markerLayerUuid" ) ) {
+			Utils.promiseReject( promise,"Undefined markerLayerUuid" ); return;
+		}
+		ItemizedLayer markerLayer = (ItemizedLayer) layerHelper.getLayers().get( params.getString( "markerLayerUuid" ) );
+		if ( markerLayer == null ) {
+			Utils.promiseReject( promise,"Unable to find markerLayer" ); return;
+		}
+		// The promise response
+		WritableMap responseParams = new WritableNativeMap();
+		// Get params, assign defaults.
+		String title = Utils.rMapHasKey( params, "title" ) ? params.getString( "title" ) : (String) getConstants().get( "title" );
+		String description = Utils.rMapHasKey( params, "description" ) ? params.getString( "description" ) : (String) getConstants().get( "description" );
+		if ( ! Utils.rMapHasKey( params, "position" ) ) {
+			Utils.promiseReject( promise,"Marker does not have a position" ); return;
+		}
+		ReadableMap position = params.getMap( "position" );
+		// Create Marker.
+		String uuid = UUID.randomUUID().toString();
+		MarkerItem markerItem = new MarkerItem(
+			uuid,
+			title,
+			description,
+			new GeoPoint(
+				position.getDouble( "lat" ),
+				position.getDouble( "lng" )
+			)
+		);
+		// Maybe get symbol.
+		if ( Utils.rMapHasKey( params, "symbol" ) ) {
+			MarkerSymbol symbol = getMarkerSymbol(
+				params.getMap( "symbol" ),
+				mapFragment.getActivity().getContentResolver()
+			);
+			markerItem.setMarker( symbol );
+		}
+		// Add index to response.
+		responseParams.putInt( "index", markerLayer.getItemList().size() );
+		// Add marker to markerLayer.
+		markerLayer.addItem( markerItem );
+		// Store marker
+		markers.put( uuid, markerItem );
+		// Update map.
+		mapView.map().updateMap();
+		// Resolve uuid
+		responseParams.putString( "uuid", uuid );
+		promise.resolve( responseParams );
+	}
+
+	@Override
+	public void removeMarker( ReadableMap params, Promise promise ) {
+		if ( ! Utils.rMapHasKey( params, "nativeNodeHandle" ) ) {
+			Utils.promiseReject( promise,"Undefined nativeNodeHandle" ); return;
+		}
+		if ( ! Utils.rMapHasKey( params, "uuid" ) ) {
+			Utils.promiseReject( promise,"Undefined uuid" ); return;
+		}
+		if ( ! Utils.rMapHasKey( params, "markerLayerUuid" ) ) {
+			Utils.promiseReject( promise, "Undefined markerLayerUuid" ); return;
+		}
+		MapView mapView = (MapView) Utils.getMapView( this.getReactApplicationContext(), params.getInt( "nativeNodeHandle" ) );
+		if ( null == mapView ) {
+			Utils.promiseReject( promise, "Unable to find mapView" ); return;
+		}
+		ItemizedLayer markerLayer = (ItemizedLayer) layerHelper.getLayers().get( params.getString( "markerLayerUuid" ) );
+		if ( markerLayer == null ) {
+			Utils.promiseReject( promise, "Unable to find markerLayer" ); return;
+		}
+		MarkerInterface marker = markers.get( params.getString( "uuid" ) );
+		if ( marker == null ) {
+			Utils.promiseReject( promise, "Unable to find marker" ); return;
+		}
+		// Remove marker from markerLayer.
+		markerLayer.removeItem( marker );
+		// Remove marker from markers.
+		markers.remove( params.getString( "uuid" ) );
+		// Update map.
+		mapView.map().updateMap();
+		// Resolve uuid
+		promise.resolve( params.getString( "uuid" ) );
+	}
 
 	protected MarkerSymbol getMarkerSymbol( ReadableMap symbolMap, ContentResolver contentResolver ) {
 		// Get hotspotPlace.

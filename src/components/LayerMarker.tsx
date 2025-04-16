@@ -3,6 +3,7 @@
  */
 import { Children, cloneElement, isValidElement, useEffect, useRef, useState } from 'react';
 import type { EventSubscription } from 'react-native';
+import { omit } from 'lodash-es';
 
 /**
  * Internal dependencies
@@ -46,7 +47,7 @@ const LayerMarker = ( {
 
     useEffect( () => {
 		errorSubscription.current = LayerMarkerModule.onError( ( error?: EventError ) => {
-			console.log( 'debug error', error ); // debug
+			console.log( 'debug error', error ); // debug ???
 		} );
         return () => {
             errorSubscription.current?.remove();
@@ -122,7 +123,7 @@ const LayerMarker = ( {
 		newChild = cloneElement(
 			child,
 			{
-				...( { layerUuid: uuid } ),
+				...( { markerLayerUuid: uuid } ),
 				...( child?.props?.children && { children: wrapChildren( child.props.children ) } ),
 			},
 		);
@@ -136,6 +137,10 @@ const LayerMarker = ( {
 
 LayerMarker.isMapLayer = true;
 
-LayerMarker.defaults = LayerMarkerModule.getConstants();
+LayerMarker.defaults = omit( LayerMarkerModule.getConstants(), [
+	'title',
+	'description',
+	'position',
+] );
 
 export default LayerMarker;

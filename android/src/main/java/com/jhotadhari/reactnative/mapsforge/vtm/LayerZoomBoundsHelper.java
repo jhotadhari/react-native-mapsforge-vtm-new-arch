@@ -120,7 +120,7 @@ public class LayerZoomBoundsHelper extends LayerHelper {
 		};
 		mapView.map().events.bind( updateListener );
 		updateEnabled( layer, enabledZoomMin, enabledZoomMax, mapView.map().viewport().getMaxZoomLevel() );
-		mapView.map().clearMap();
+		mapView.map().updateMap();
 	}
 
 }

@@ -41,7 +41,7 @@ public class LayerHelper {
 		);
 
 		// Trigger update map.
-		mapView.map().clearMap();
+		mapView.map().updateMap();
 
 		String uuid = UUID.randomUUID().toString();
 		layers.put( uuid, layer );
@@ -75,7 +75,7 @@ public class LayerHelper {
 			layers.remove( uuid );
 
 			// Trigger map update.
-			mapView.map().clearMap();
+			mapView.map().updateMap();
 
 			// Resolve uuid
 			promise.resolve( uuid );

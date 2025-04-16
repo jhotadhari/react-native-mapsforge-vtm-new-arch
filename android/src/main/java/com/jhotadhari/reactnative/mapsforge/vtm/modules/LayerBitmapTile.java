@@ -60,7 +60,6 @@ public class LayerBitmapTile extends NativeLayerBitmapTileSpec {
 	@Override
 	public void createLayer( ReadableMap params, Promise promise ) {
 		try {
-
 			if ( ! Utils.rMapHasKey( params, "nativeNodeHandle" ) ) {
 				Utils.promiseReject( promise,"Undefined nativeNodeHandle" ); return;
 			}

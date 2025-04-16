@@ -16,11 +16,22 @@ import {
   type MapEventResponse,
 } from 'react-native-mapsforge-vtm';
 import type { Int32 } from 'react-native/Libraries/Types/CodegenTypes';
+import Marker from '../../src/components/Marker';
 
 const defaultCenter : Location = {
-	lng: -77.605,
-	lat: -9.118,
+	lng: -77,
+	lat: -9,
 };
+
+
+export const randomNumber = ( min: number, max: number ) : number => Math.random() * ( max - min ) + min;
+
+const getRandomPositions = ( length: number ) : Location[] => Array.apply( null, Array( length ) ).map( () => ( {
+  lng: randomNumber( -78, -76 ),
+  lat: randomNumber( -10, -8 ),
+} ) );
+
+const positions = getRandomPositions( 500 );
 
 export default function App() {
 
@@ -29,15 +40,15 @@ export default function App() {
 
 
   const [mapState,setMapState] = useState<MapEventResponse>( {} );
-  const [initialZoom,setInitialZoom] = useState<Int32>( 8 );
+  const [hasMarker,setHasMarker] = useState( true );
 
 
   return (
     <View style={styles.container}>
 
       <Button
-        title={ 'Increase height' }
-        onPress={ () => setHeight( height + 100 ) }
+        title={ 'Bla' }
+        onPress={ () => setHasMarker( ! hasMarker ) }
       />
 
       <Text style={ {color: '#ffffff'} }>bla</Text>
@@ -57,24 +68,32 @@ export default function App() {
           // tilt: 2,
           center: 2,
         } }
-        zoomLevel={ initialZoom }
-        onMapUpdate={ ( response: NativeSyntheticEvent<Readonly<MapEventResponse>> ) => {
-          console.log( 'debug onMapUpdate', response?.nativeEvent ); // debug
-          setMapState( response?.nativeEvent );
-        } }
-        onPause={ ( response: NativeSyntheticEvent<Readonly<MapEventResponse>> ) => {
-          console.log( 'debug onPause', response?.nativeEvent ); // debug
-        } }
-        onResume={ ( response: NativeSyntheticEvent<Readonly<MapEventResponse>> ) => {
-          console.log( 'debug onResume', response?.nativeEvent ); // debug
-        } }
+        zoomLevel={ 8 }
+        // onMapUpdate={ ( response: NativeSyntheticEvent<Readonly<MapEventResponse>> ) => {
+        //   console.log( 'debug onMapUpdate', response?.nativeEvent ); // debug
+        //   setMapState( response?.nativeEvent );
+        // } }
+        // onPause={ ( response: NativeSyntheticEvent<Readonly<MapEventResponse>> ) => {
+        //   console.log( 'debug onPause', response?.nativeEvent ); // debug
+        // } }
+        // onResume={ ( response: NativeSyntheticEvent<Readonly<MapEventResponse>> ) => {
+        //   console.log( 'debug onResume', response?.nativeEvent ); // debug
+        // } }
         onError={ ( response: NativeSyntheticEvent<Readonly<MapError>> ) => {
           console.log( 'debug onError', response?.nativeEvent ); // debug
         } }
       >
         <LayerBitmapTile/>
 
-        <LayerMarker/>
+        <LayerMarker>
+
+          { hasMarker && [...positions].map( ( position: Location, idx: number ) => {
+            return <Marker key={ idx } position={ position }/>;
+          } ) }
+
+          {/* { hasMarker && <Marker position={ defaultCenter }/> } */}
+
+        </LayerMarker>
 
       </MapContainer>
 

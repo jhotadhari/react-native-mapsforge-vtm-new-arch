@@ -2,6 +2,15 @@ import type { TurboModule } from 'react-native';
 import { TurboModuleRegistry } from 'react-native';
 import type { Double, EventEmitter, Int32 } from 'react-native/Libraries/Types/CodegenTypes';
 
+interface ResponseBase {
+    uuid: string;
+    nativeNodeHandle: Int32;
+};
+
+export interface MarkerResponse extends ResponseBase {
+	index: number;
+};
+
 export const MarkerHotspotPlaces = [
     'NONE',
     'CENTER',
@@ -15,7 +24,7 @@ export const MarkerHotspotPlaces = [
     'LOWER_LEFT_CORNER',
 ] as const;
 
-export interface ModuleParams {
+export interface ModuleLayerParams {
 	symbol?: {
         width?: Double;
         height?: Double;
@@ -34,11 +43,21 @@ export interface ModuleParams {
     };
 };
 
+export interface ModuleParams extends ModuleLayerParams {
+    title?: string;
+    description?: string;
+    position?: null | { // Location
+        lng: Double;
+        lat: Double;
+        alt?: Double;
+    };
+}
+
 interface EventError {
   errorMsg: string;
 };
 
-export interface CreateLayerParams extends ModuleParams {
+export interface CreateLayerParams extends ModuleLayerParams {
 	nativeNodeHandle?: Int32;
 	reactTreeIndex?: Int32;
 };
@@ -48,10 +67,23 @@ export interface RemoveLayerParams {
 	uuid: string;
 };
 
+export interface CreateMarkerParams extends ModuleParams {
+	nativeNodeHandle: Int32;
+	markerLayerUuid: string;
+};
+
+export interface RemoveMarkerParams {
+	nativeNodeHandle: Int32;
+	markerLayerUuid: string;
+	uuid: string;
+};
+
 export interface Spec extends TurboModule {
 	getConstants(): ModuleParams;
 	createLayer( params: CreateLayerParams ): Promise<string>;
 	removeLayer( params: RemoveLayerParams ): Promise<string>;
+	createMarker( params: CreateMarkerParams ): Promise<MarkerResponse>;
+	removeMarker( params: RemoveMarkerParams ): Promise<string>;
     onError: EventEmitter<EventError>;
 };
 
