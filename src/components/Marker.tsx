@@ -1,53 +1,26 @@
 /**
  * External dependencies
  */
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { omit } from 'lodash-es';
 
 /**
  * Internal dependencies
  */
 // import { MarkerHotspotPlaces } from '../constants';
 import LayerMarkerModule, {
-    type ModuleParams,
-	type CreateMarkerParams,
-	type MarkerEvent,
-	type SymbolParams,
+	type MarkerProps,
 } from '../NativeModules/NativeLayerMarker';
-import type { Location, ResponseBase } from '../types';
 import { MarkerHotspotPlaces, type MarkerResponse } from '../NativeModules/NativeLayerMarker';
 import useMarkerEventSubscription from '../compose/useMarkerEventSubscription';
-import { omit } from 'lodash-es';
-
-
-export type MarkerProps = {
-	nativeNodeHandle?: CreateMarkerParams['nativeNodeHandle'];
-	markerLayerUuid?: CreateMarkerParams['markerLayerUuid'];
-
-	position: CreateMarkerParams['position'];
-    title?: CreateMarkerParams['title'];
-    description?: CreateMarkerParams['description'];
-    symbol?: SymbolParams;
-
-
-	onCreate?: null | ( ( response: MarkerResponse ) => void );
-	onRemove?: null | ( ( response: ResponseBase ) => void );
-	onChange?: null | ( ( response: MarkerResponse ) => void );
-	onError?: null | ( ( err: any ) => void );
-	onEvent?: null | ( ( response: MarkerEvent ) => void );
-	onPress?: null | ( ( response: MarkerEvent ) => void );
-	onLongPress?: null | ( ( response: MarkerEvent ) => void );
-	onTrigger?: null | ( ( response: MarkerEvent ) => void );
-};
 
 const Marker = ( {
 	nativeNodeHandle,
 	markerLayerUuid,
-
     title,
     description,
 	position,
 	symbol,
-
 	onCreate,
 	onRemove,
 	onChange,

@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { Children, cloneElement, isValidElement, useEffect, useRef, useState, type RefObject } from 'react';
+import { Children, cloneElement, isValidElement, useEffect, useRef, useState } from 'react';
 import type { EventSubscription } from 'react-native';
 import { omit, pick } from 'lodash-es';
 
@@ -9,33 +9,12 @@ import { omit, pick } from 'lodash-es';
  * Internal dependencies
  */
 import LayerMarkerModule, {
-    type CreateLayerParams,
-	type MarkerEvent,
-	type SymbolParams,
+	type LayerMarkerProps,
 	type TriggerParams,
 } from '../NativeModules/NativeLayerMarker';
 
-import type { ErrorBase, EventError, ResponseBase } from '../types';
+import type { ErrorBase, EventError } from '../types';
 import useMarkerEventSubscription from '../compose/useMarkerEventSubscription';
-
-export type TriggerEvent = ( typeof LayerMarkerModule )['triggerEvent'];
-
-export type LayerMarkerProps = {
-	nativeNodeHandle?: CreateLayerParams['nativeNodeHandle'];
-	reactTreeIndex?: CreateLayerParams['reactTreeIndex'];
-	children?: React.ReactNode;
-	symbol?: SymbolParams;
-	onCreate?: null | ( ( response: ResponseBase ) => void );
-	onRemove?: null | ( ( response: ResponseBase ) => void );
-	onChange?: null | ( ( response: ResponseBase ) => void );
-	onError?: null | ( ( err: ErrorBase ) => void );
-	onMarkerEvent?: null | ( ( response: MarkerEvent ) => void );
-	onMarkerPress?: null | ( ( response: MarkerEvent ) => void );
-	onMarkerLongPress?: null | ( ( response: MarkerEvent ) => void );
-	onMarkerTrigger?: null | ( ( response: MarkerEvent ) => void );
-	triggerEvent?: RefObject<null | TriggerEvent>;
-};
-
 
 const defaultsTrigger = pick( LayerMarkerModule.getConstants(), [
 	'strategy',

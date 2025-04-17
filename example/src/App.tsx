@@ -12,12 +12,17 @@ import {
   LayerBitmapTile,
   LayerMarker,
   MapContainer,
+  Marker,
+  MarkerTypes,
   type Location,
-  type MapError,
+  // type MapError,
+  MapContainerTypes
 } from 'react-native-mapsforge-vtm';
-import Marker from '../../src/components/Marker';
-import type { MarkerEvent } from '../../src/NativeModules/NativeLayerMarker';
-import type { TriggerEvent } from '../../src/components/LayerMarker';
+// import Marker from '../../src/components/Marker';
+// import type { MarkerEvent } from '../../src/NativeModules/NativeLayerMarker';
+// import type { TriggerEvent } from '../../src/components/LayerMarker';
+
+
 
 const defaultCenter : Location = {
 	lng: -77,
@@ -62,6 +67,7 @@ const getRandomPositions = ( length: number ) : Location[] => Array.apply( null,
 
 const positions = getRandomPositions( 100 );
 
+
 export default function App() {
 
   const { width } = useWindowDimensions();
@@ -72,7 +78,7 @@ export default function App() {
   const [hasMarker,setHasMarker] = useState( true );
   const [enableBtns,setEnableBtns] = useState( false );
 
-  const triggerEvent = useRef<TriggerEvent>( null );
+  const triggerEvent = useRef<MarkerTypes.TriggerEvent>( null );
 
   useEffect( () => {
     setEnableBtns( !! triggerEvent?.current );
@@ -155,7 +161,7 @@ export default function App() {
           // onResume={ ( response: NativeSyntheticEvent<Readonly<MapEventResponse>> ) => {
           //   console.log( 'debug onResume', response?.nativeEvent ); // debug
           // } }
-          onError={ ( response: NativeSyntheticEvent<Readonly<MapError>> ) => {
+          onError={ ( response: NativeSyntheticEvent<Readonly<MapContainerTypes.MapError>> ) => {
             console.log( 'debug onError', response?.nativeEvent ); // debug
           } }
         >
@@ -163,7 +169,7 @@ export default function App() {
 
           <LayerMarker
             triggerEvent={ triggerEvent }
-            onMarkerEvent={ ( response?: MarkerEvent ) => {
+            onMarkerEvent={ ( response?: MarkerTypes.MarkerEvent ) => {
               console.log( 'debug onMarkerEvent', response ); // debug
             } }
           >
@@ -172,7 +178,7 @@ export default function App() {
               return <Marker
                 key={ idx }
                 position={ position }
-                // onEvent={ ( response?: MarkerEvent ) => {
+                // onEvent={ ( response?: MarkerTypes.MarkerEvent ) => {
                 //   console.log( 'debug onEvent', response ); // debug
                 // } }
 

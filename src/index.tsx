@@ -1,38 +1,43 @@
-export { default as MapsforgeVtmView } from './NativeViews/MapsforgeVtmViewNativeComponent';
-export * from './NativeViews/MapsforgeVtmViewNativeComponent';
+// export { default as MapsforgeVtmView } from './NativeViews/MapsforgeVtmViewNativeComponent';
 
 import MapContainer from './components/MapContainer';
-// import LayerMapsforge from './components/LayerMapsforge';
+import * as MapContainerTypes from './NativeViews/MapsforgeVtmViewNativeComponent';
+
+import LayerMarker from './components/LayerMarker';
+import Marker from './components/Marker';
+import * as MarkerTypes from './NativeModules/NativeLayerMarker';
+
 import LayerBitmapTile from './components/LayerBitmapTile';
+import * as LayerBitmapTileTypes from './NativeModules/NativeLayerBitmapTile';
+
+// import LayerMapsforge from './components/LayerMapsforge';
 // import LayerHillshading from './components/LayerHillshading';
 // import LayerMBTilesBitmap from './components/LayerMBTilesBitmap';
 // import LayerScalebar from './components/LayerScalebar';
 // import LayerPath from './components/LayerPath';
 // import LayerPathSlopeGradient from './components/LayerPathSlopeGradient';
-import LayerMarker from './components/LayerMarker';
-// import Marker from './components/Marker';
+
 // import useRenderStyleOptions from './compose/useRenderStyleOptions';
-// import usePromiseQueueState from './compose/usePromiseQueueState';
-// import useMapEvents from './compose/useMapEvents';
-// import promiseQueue from './promiseQueue';
 
 export {
 	MapContainer,
-	// LayerMapsforge,
+	MapContainerTypes,
+
+	LayerMarker,
+	Marker,
+	MarkerTypes,
+
 	LayerBitmapTile,
+	LayerBitmapTileTypes,
+
+	// LayerMapsforge,
 	// LayerHillshading,
 	// LayerMBTilesBitmap,
 	// LayerScalebar,
 	// LayerPath,
 	// LayerPathSlopeGradient,
-	LayerMarker,
-	// Marker,
+
 	// useRenderStyleOptions,
-	// usePromiseQueueState,
-	// useMapEvents,
-	// useMapLayersCreated,
-	// promiseQueue,
-	// // utils,
 
 };
 

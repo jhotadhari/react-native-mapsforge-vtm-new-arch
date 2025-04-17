@@ -6,8 +6,6 @@ import {
 	useEffect,
 	useRef,
 	useState,
-	type Dispatch,
-	type SetStateAction,
 	Children,
 	isValidElement,
 } from 'react';
@@ -21,10 +19,9 @@ import { get, isBoolean } from 'lodash-es';
 /**
  * Internal dependencies
  */
-
 import NativeMapContainer from '../NativeModules/NativeMapContainer';
 import MapsforgeVtmView, {
-    type MapViewProps,
+	type MapContainerProps,
 } from '../NativeViews/MapsforgeVtmViewNativeComponent';
 
 const moduleDefaults = NativeMapContainer.getConstants();
@@ -32,42 +29,6 @@ const moduleDefaults = NativeMapContainer.getConstants();
 const useDefaultWidth = ( propsWidth?: number | null ) => {
 	const { width } = useWindowDimensions();
 	return propsWidth || width;
-};
-
-export type MapContainerProps = {
-	children?: React.ReactNode;
-	nativeNodeHandle?: null | number;
-	setNativeNodeHandle?: null | Dispatch<SetStateAction<number | null>>;
-	width?: null | MapViewProps['width'];
-	height?: MapViewProps['height'];
-	center?: MapViewProps['center'];
-	zoomLevel?: MapViewProps['zoomLevel'];
-	zoomMin?: MapViewProps['zoomMin'];
-	zoomMax?: MapViewProps['zoomMax'];
-	moveEnabled?: MapViewProps['moveEnabled'];
-	tiltEnabled?: MapViewProps['tiltEnabled'];
-	rotationEnabled?: MapViewProps['rotationEnabled'];
-	zoomEnabled?: MapViewProps['zoomEnabled'];
-	tilt?:  MapViewProps['tilt'];
-	minTilt?:  MapViewProps['minTilt'];
-	maxTilt?:  MapViewProps['maxTilt'];
-	bearing?:  MapViewProps['bearing'];
-	minBearing?:  MapViewProps['minBearing'];
-	maxBearing?:  MapViewProps['maxBearing'];
-	roll?:  MapViewProps['roll'];
-	minRoll?:  MapViewProps['minRoll'];
-	maxRoll?:  MapViewProps['maxRoll'];
-	hgtDirPath?: null | `/${string}` | `content://${string}`;
-	hgtInterpolation?:  MapViewProps['hgtInterpolation'];
-	hgtReadFileRate?:  MapViewProps['hgtReadFileRate'];
-	hgtFileInfoPurgeThreshold?:  MapViewProps['hgtFileInfoPurgeThreshold'];
-	responseInclude?: MapViewProps['responseInclude'];
-	mapEventRate?: MapViewProps['mapEventRate'];
-	emitsMapUpdateEvents?: null | MapViewProps['emitsMapUpdateEvents'];
-	onMapUpdate?: MapViewProps['onMapUpdate'];
-	onPause?: MapViewProps['onPause'];
-	onResume?: MapViewProps['onResume'];
-	onError?: MapViewProps['onError'];
 };
 
 const MapContainer = ( {

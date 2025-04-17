@@ -7,27 +7,9 @@ import { useEffect, useState } from 'react';
  * Internal dependencies
  */
 import LayerBitmapTileModule, {
-    type CreateLayerParams,
+	type LayerBitmapTileProps,
 } from '../NativeModules/NativeLayerBitmapTile';
-import type { ErrorBase, ResponseBase } from '../types';
-
-export type LayerBitmapTileProps = {
-	nativeNodeHandle?: CreateLayerParams['nativeNodeHandle'];
-	reactTreeIndex?: CreateLayerParams['reactTreeIndex'];
-	url?: string;
-	alpha?: CreateLayerParams['alpha'];
-	zoomMin?: CreateLayerParams['zoomMin'];
-	zoomMax?: CreateLayerParams['zoomMax'];
-	enabledZoomMin?: CreateLayerParams['enabledZoomMin'];
-	enabledZoomMax?: CreateLayerParams['enabledZoomMax'];
-	cacheSize?: CreateLayerParams['cacheSize'];
-	cacheDirBase?: `/${string}`;
-	cacheDirChild?: CreateLayerParams['cacheDirChild'];
-	onCreate?: null | ( ( result: ResponseBase ) => void );
-	onRemove?: null | ( ( result: ResponseBase ) => void );
-	onChange?: null | ( ( result: ResponseBase ) => void );
-	onError?: null | ( ( err: ErrorBase ) => void );
-};
+import type { ErrorBase } from '../types';
 
 const LayerBitmapTile = ( {
 	nativeNodeHandle,

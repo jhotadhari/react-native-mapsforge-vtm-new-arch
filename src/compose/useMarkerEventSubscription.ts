@@ -1,7 +1,6 @@
 import { useRef, useEffect } from "react";
 import type { EventSubscription } from "react-native";
-import type { MarkerProps } from "../components/Marker";
-import LayerMarkerModule, { type MarkerEvent } from "../NativeModules/NativeLayerMarker";
+import LayerMarkerModule, { type MarkerEvent, type MarkerProps } from "../NativeModules/NativeLayerMarker";
 
 const useMarkerEventSubscription = ( {
 	uuid,
