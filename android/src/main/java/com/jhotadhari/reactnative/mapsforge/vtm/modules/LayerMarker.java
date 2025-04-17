@@ -80,11 +80,12 @@ public class LayerMarker extends NativeLayerMarkerSpec {
 		symbol.putString( "hotspotPlace", "CENTER" );
 		symbol.putString( "text", null );
 		symbol.putInt( "textMargin", 10 );
-		symbol.putInt( "textStrokeWidth", 3 );
 		symbol.putNull( "textPositionX" );
 		symbol.putNull( "textPositionY" );
 		symbol.putString( "textColor", "#111111" );
 		symbol.putInt( "textSize", 30 );
+		symbol.putString( "fontFamily", "DEFAULT" );
+		symbol.putString( "fontStyle", "NORMAL" );
 		constants.put( "symbol", symbol );
 		// For marker.
 		constants.put( "title", "" );
@@ -370,6 +371,33 @@ public class LayerMarker extends NativeLayerMarkerSpec {
 		);
 	}
 
+	protected Paint.FontFamily getFontFamily( ReadableMap symbolMap, ReadableMap symbolConstants ) {
+		return switch ( Utils.rMapHasKey( symbolMap, "fontFamily" ) ? symbolMap.getString( "fontFamily" ) : symbolConstants.getString( "fontFamily" ) ) {
+			case "DEFAULT" -> Paint.FontFamily.DEFAULT;
+			case "DEFAULT_BOLD" -> Paint.FontFamily.DEFAULT_BOLD;
+			case "MONOSPACE" -> Paint.FontFamily.MONOSPACE;
+			case "SANS_SERIF" -> Paint.FontFamily.SANS_SERIF;
+			case "SERIF" -> Paint.FontFamily.SERIF;
+			case "THIN" -> Paint.FontFamily.THIN;
+			case "LIGHT" -> Paint.FontFamily.LIGHT;
+			case "MEDIUM" -> Paint.FontFamily.MEDIUM;
+			case "BLACK" -> Paint.FontFamily.BLACK;
+			case "CONDENSED" -> Paint.FontFamily.CONDENSED;
+			default -> Paint.FontFamily.DEFAULT;
+		};
+	}
+
+	protected Paint.FontStyle getFontStyle( ReadableMap symbolMap, ReadableMap symbolConstants ) {
+		return switch ( Utils.rMapHasKey( symbolMap, "fontStyle" ) ? symbolMap.getString( "fontStyle" ) : symbolConstants.getString( "fontStyle" ) ) {
+			case "BOLD" -> Paint.FontStyle.BOLD;
+			case "BOLD_ITALIC" -> Paint.FontStyle.BOLD_ITALIC;
+			case "ITALIC" -> Paint.FontStyle.ITALIC;
+			case "NORMAL" -> Paint.FontStyle.NORMAL;
+			default -> Paint.FontStyle.NORMAL;
+		};
+	}
+
+
 	protected Bitmap getMarkerBitmap(
 		ReadableMap symbolMap,
 		ContentResolver contentResolver
@@ -393,12 +421,14 @@ public class LayerMarker extends NativeLayerMarkerSpec {
 			// Get params, assign defaults.
 			String textColor = Utils.rMapHasKey( symbolMap, "textColor" ) ? symbolMap.getString( "textColor" ) : symbolConstants.getString( "textColor" );
 			int textSize = Utils.rMapHasKey( symbolMap, "textSize" ) ? symbolMap.getInt( "textSize" ) : symbolConstants.getInt( "textSize" );
-			int textStrokeWidth = Utils.rMapHasKey( symbolMap, "textStrokeWidth" ) ? symbolMap.getInt( "textStrokeWidth" ) : symbolConstants.getInt( "textStrokeWidth" );
 			// Setup textPainter.
 			textPainter = CanvasAdapter.newPaint();
-			textPainter.setStyle( Paint.Style.STROKE );
-			textPainter.setStrokeWidth( textStrokeWidth );
+			textPainter.setStyle( Paint.Style.FILL );
 			textPainter.setTextSize( textSize );
+			textPainter.setTypeface(
+				getFontFamily( symbolMap, symbolConstants),
+				getFontStyle( symbolMap, symbolConstants)
+			);
 			textPainter.setColor( Color.parseColor( textColor ) );
 			// Setup text dimensions and adjust width and height to fit text.
 			textWidth = ( (int) textPainter.getTextWidth( text ) + 2 * textMargin );

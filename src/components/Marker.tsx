@@ -11,6 +11,7 @@ import LayerMarkerModule, {
     type ModuleParams,
 	type CreateMarkerParams,
 	type MarkerEvent,
+	type SymbolParams,
 } from '../NativeModules/NativeLayerMarker';
 import type { Location, ResponseBase } from '../types';
 import { MarkerHotspotPlaces, type MarkerResponse } from '../NativeModules/NativeLayerMarker';
@@ -25,7 +26,7 @@ export type MarkerProps = {
 	position: CreateMarkerParams['position'];
     title?: CreateMarkerParams['title'];
     description?: CreateMarkerParams['description'];
-    symbol?: CreateMarkerParams['symbol'];
+    symbol?: SymbolParams;
 
 
 	onCreate?: null | ( ( response: MarkerResponse ) => void );

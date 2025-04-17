@@ -24,8 +24,46 @@ export const MarkerHotspotPlaces = [
     'LOWER_LEFT_CORNER',
 ] as const;
 
+export const FontFamily = [
+    'DEFAULT',
+    'DEFAULT_BOLD',
+    'MONOSPACE',
+    'SANS_SERIF',
+    'SERIF',
+    'THIN',
+    'LIGHT',
+    'MEDIUM',
+    'BLACK',
+    'CONDENSED',
+] as const;
+
+export const FontStyle = [
+    'BOLD',
+    'BOLD_ITALIC',
+    'ITALIC',
+    'NORMAL'
+] as const;
+
+export interface SymbolParams {
+    width?: Double;
+    height?: Double;
+    filePath?: `/${string}` | `content://${string}`;
+    fillColor?: `#${string}`;
+    strokeColor?: `#${string}`;
+    strokeWidth?: Int32;
+    hotspotPlace?: typeof MarkerHotspotPlaces[number];
+    text?: null | string;
+    textColor?: `#${string}`;
+    textSize?: Int32;
+    textMargin?: Int32;
+    textPositionX?: null | Double;
+    textPositionY?: null | Double;
+    fontFamily?: typeof FontFamily[number];
+    fontStyle?: typeof FontStyle[number];
+}
+
 export interface ModuleLayerParams {
-	symbol?: {
+	symbol?: {                          // SymbolParams
         width?: Double;
         height?: Double;
         filePath?: null | string;       // `/${string}` | `content://${string}`;
@@ -37,9 +75,10 @@ export interface ModuleLayerParams {
         textColor?: string;             // `#${string}`;
         textSize?: Int32;
         textMargin?: Int32;
-        textStrokeWidth?: Int32;
         textPositionX?: null | Double;
         textPositionY?: null | Double;
+        fontFamily?: string;            // FontFamily
+        fontStyle?: string;             // FontStyle
     };
 };
 

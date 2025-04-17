@@ -11,6 +11,7 @@ import { omit, pick } from 'lodash-es';
 import LayerMarkerModule, {
     type CreateLayerParams,
 	type MarkerEvent,
+	type SymbolParams,
 	type TriggerParams,
 } from '../NativeModules/NativeLayerMarker';
 
@@ -23,7 +24,7 @@ export type LayerMarkerProps = {
 	nativeNodeHandle?: CreateLayerParams['nativeNodeHandle'];
 	reactTreeIndex?: CreateLayerParams['reactTreeIndex'];
 	children?: React.ReactNode;
-	symbol?: CreateLayerParams['symbol'];
+	symbol?: SymbolParams;
 	onCreate?: null | ( ( response: ResponseBase ) => void );
 	onRemove?: null | ( ( response: ResponseBase ) => void );
 	onChange?: null | ( ( response: ResponseBase ) => void );
