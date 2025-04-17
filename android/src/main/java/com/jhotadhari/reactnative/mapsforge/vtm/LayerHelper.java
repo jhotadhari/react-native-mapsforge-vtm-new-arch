@@ -29,7 +29,7 @@ public class LayerHelper {
 		return layers;
 	}
 
-	public String addLayer( Layer layer, ReadableMap params ) {
+	public String addLayer( Layer layer, ReadableMap params, String uuid ) {
 		if ( ! Utils.rMapHasKey( params, "nativeNodeHandle" ) ) { return null; }
 		MapView mapView = Utils.getMapView( reactContext, params.getInt( "nativeNodeHandle" ) );
 		if ( null == mapView ) { return null; }
@@ -42,13 +42,34 @@ public class LayerHelper {
 
 		// Trigger update map.
 		mapView.map().updateMap();
-
-		String uuid = UUID.randomUUID().toString();
 		layers.put( uuid, layer );
 
 		return uuid;
 	}
 
+	public String replaceLayer( int nativeNodeHandle, String uuid, Layer layer) {
+
+		int layerIndex = getLayerIndexInMapLayers( nativeNodeHandle, uuid );
+		if ( -1 == layerIndex ) {
+			return "Layer index not found";
+		}
+
+		MapView mapView = Utils.getMapView( reactContext, nativeNodeHandle );
+		if ( null == mapView ) { return null; }
+
+		// Replace old vectorLayer with new one on map.
+		mapView.map().layers().set( layerIndex, layer );
+
+		mapView.map().updateMap();
+		layers.put( uuid, layer );
+
+		return null;
+	}
+
+	public String addLayer( Layer layer, ReadableMap params ) {
+		String uuid = UUID.randomUUID().toString();
+		return addLayer( layer, params, uuid );
+	}
 
 	public void removeLayer( ReadableMap params, Promise promise ) {
 		try {
@@ -84,7 +105,6 @@ public class LayerHelper {
 			Utils.promiseReject( promise, e.getMessage() );
 		}
 	}
-
 
 	protected int getLayerIndexInMapLayers(
 		int nativeNodeHandle,

@@ -11,6 +11,7 @@ import {
 import {
   LayerBitmapTile,
   LayerMarker,
+  LayerPath,
   MapContainer,
   Marker,
   MarkerTypes,
@@ -65,7 +66,7 @@ const getRandomPositions = ( length: number ) : Location[] => Array.apply( null,
   lat: randomNumber( -10, -8 ),
 } ) );
 
-const positions = getRandomPositions( 100 );
+const positions = getRandomPositions( 50 );
 
 
 export default function App() {
@@ -166,6 +167,11 @@ export default function App() {
           } }
         >
           <LayerBitmapTile/>
+
+          <LayerPath
+            positions={ positions }
+
+          />
 
           <LayerMarker
             triggerEvent={ triggerEvent }
