@@ -51,10 +51,16 @@ export interface ModuleParams extends ModuleLayerParams {
         lat: Double;
         alt?: Double;
     };
+    strategy?: string;
 }
 
 interface EventError {
   errorMsg: string;
+};
+
+export interface MarkerEvent extends ResponseBase {
+	event: string;
+    distance?: Double;
 };
 
 export interface CreateLayerParams extends ModuleLayerParams {
@@ -78,13 +84,23 @@ export interface RemoveMarkerParams {
 	uuid: string;
 };
 
+export interface TriggerParams {
+    nativeNodeHandle?: Int32;
+    markerLayerUuid?: string;
+    x?: Double;
+    y?: Double;
+    strategy?: string;   // 'first' | '`nearest`' | `all`
+}
+
 export interface Spec extends TurboModule {
 	getConstants(): ModuleParams;
 	createLayer( params: CreateLayerParams ): Promise<string>;
 	removeLayer( params: RemoveLayerParams ): Promise<string>;
 	createMarker( params: CreateMarkerParams ): Promise<MarkerResponse>;
 	removeMarker( params: RemoveMarkerParams ): Promise<string>;
+    triggerEvent( params: TriggerParams ): void;
     onError: EventEmitter<EventError>;
+    onMarkerEvent: EventEmitter<MarkerEvent>;
 };
 
 export default TurboModuleRegistry.getEnforcing<Spec>( 'LayerMarker' );

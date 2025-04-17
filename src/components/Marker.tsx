@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 /**
  * Internal dependencies
@@ -10,9 +10,12 @@ import { useEffect, useState } from 'react';
 import LayerMarkerModule, {
     type ModuleParams,
 	type CreateMarkerParams,
+	type MarkerEvent,
 } from '../NativeModules/NativeLayerMarker';
 import type { Location, ResponseBase } from '../types';
 import { MarkerHotspotPlaces, type MarkerResponse } from '../NativeModules/NativeLayerMarker';
+import useMarkerEventSubscription from '../compose/useMarkerEventSubscription';
+import { omit } from 'lodash-es';
 
 
 export type MarkerProps = {
@@ -29,9 +32,10 @@ export type MarkerProps = {
 	onRemove?: null | ( ( response: ResponseBase ) => void );
 	onChange?: null | ( ( response: MarkerResponse ) => void );
 	onError?: null | ( ( err: any ) => void );
-	onPress?: null | ( ( response: MarkerResponse ) => void );
-	onLongPress?: null | ( ( response: MarkerResponse ) => void );
-	onTrigger?: null | ( ( response: MarkerResponse ) => void );
+	onEvent?: null | ( ( response: MarkerEvent ) => void );
+	onPress?: null | ( ( response: MarkerEvent ) => void );
+	onLongPress?: null | ( ( response: MarkerEvent ) => void );
+	onTrigger?: null | ( ( response: MarkerEvent ) => void );
 };
 
 const Marker = ( {
@@ -47,6 +51,7 @@ const Marker = ( {
 	onRemove,
 	onChange,
 	onError,
+	onEvent,
 	onPress,
 	onLongPress,
 	onTrigger,
@@ -116,56 +121,21 @@ const Marker = ( {
 		symbol ? Object.values( symbol ).join( '' ) : null,
 	] );
 
-	// useEffect( () => {
-	// 	const eventEmitter = new NativeEventEmitter();
-	// 	let eventListener = eventEmitter.addListener( 'MarkerItemSingleTapUp', ( response : MarkerResponse ) => {
-	// 		if ( response.uuid === uuid && onPress ) {
-    //             onPress( response );
-	// 		}
-	// 	} );
-	// 	return () => {
-	// 		eventListener.remove();
-	// 	};
-	// }, [
-	// 	uuid,
-	// 	onPress,
-	// ] );
-
-	// useEffect( () => {
-	// 	const eventEmitter = new NativeEventEmitter();
-	// 	let eventListener = eventEmitter.addListener( 'MarkerItemLongPress', ( response : MarkerResponse ) => {
-	// 		if ( response.uuid === uuid && onLongPress ) {
-    //             onLongPress( response );
-	// 		}
-	// 	} );
-	// 	return () => {
-	// 		eventListener.remove();
-	// 	};
-	// }, [
-	// 	uuid,
-	// 	onLongPress,
-	// ] );
-
-	// useEffect( () => {
-	// 	const eventEmitter = new NativeEventEmitter();
-	// 	let eventListener = eventEmitter.addListener( 'MarkerItemTriggerEvent', ( response : MarkerResponse ) => {
-	// 		if ( response.uuid === uuid && onTrigger ) {
-    //             onTrigger( response );
-	// 		}
-	// 	} );
-	// 	return () => {
-	// 		eventListener.remove();
-	// 	};
-	// }, [
-	// 	uuid,
-	// 	onTrigger,
-	// ] );
+	useMarkerEventSubscription( {
+		uuid,
+		onEvent,
+		onPress,
+		onLongPress,
+		onTrigger,
+	} );
 
 	return null;
 };
 
 Marker.MarkerHotspotPlaces = MarkerHotspotPlaces;
 
-Marker.defaults = LayerMarkerModule.getConstants();
+Marker.defaults = omit( LayerMarkerModule.getConstants(), [
+	'strategy',
+] );
 
 export default Marker;

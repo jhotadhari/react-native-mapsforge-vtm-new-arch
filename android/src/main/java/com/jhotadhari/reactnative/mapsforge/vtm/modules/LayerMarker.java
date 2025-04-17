@@ -10,11 +10,11 @@ import androidx.documentfile.provider.DocumentFile;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
-import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableNativeMap;
 import com.facebook.react.module.annotations.ReactModule;
+import com.jhotadhari.reactnative.mapsforge.vtm.layer.ItemizedLayer;
 import com.jhotadhari.reactnative.mapsforge.vtm.LayerHelper;
 import com.jhotadhari.reactnative.mapsforge.vtm.NativeLayerMarkerSpec;
 import com.jhotadhari.reactnative.mapsforge.vtm.Utils;
@@ -26,11 +26,14 @@ import org.oscim.backend.canvas.Bitmap;
 import org.oscim.backend.canvas.Canvas;
 import org.oscim.backend.canvas.Color;
 import org.oscim.backend.canvas.Paint;
+import org.oscim.core.Box;
 import org.oscim.core.GeoPoint;
-import org.oscim.layers.marker.ItemizedLayer;
+import org.oscim.core.Point;
+import org.oscim.core.Tile;
 import org.oscim.layers.marker.MarkerInterface;
 import org.oscim.layers.marker.MarkerItem;
 import org.oscim.layers.marker.MarkerSymbol;
+import org.oscim.map.Viewport;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -38,6 +41,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 @ReactModule( name = LayerMarker.NAME )
@@ -48,6 +52,8 @@ public class LayerMarker extends NativeLayerMarkerSpec {
 	private final LayerHelper layerHelper;
 
 	protected Map<String, MarkerItem> markers = new HashMap<>();
+
+	protected final Point tmpPoint = new Point();
 
 	public LayerMarker( ReactApplicationContext reactContext) {
 		super(reactContext);
@@ -84,7 +90,100 @@ public class LayerMarker extends NativeLayerMarkerSpec {
 		constants.put( "title", "" );
 		constants.put( "description", "" );
 		constants.put( "position", null );
+		// For event.
+		constants.put( "strategy", "nearest" );
 		return constants;
+	}
+
+	@Override
+	public void triggerEvent( ReadableMap params ) {
+		if ( ! Utils.rMapHasKey( params, "nativeNodeHandle" ) ) {
+			return;
+		}
+		MapView mapView = Utils.getMapView( getReactApplicationContext(), params.getInt( "nativeNodeHandle" ) );
+		MapFragment mapFragment = Utils.getMapFragment( getReactApplicationContext(), params.getInt( "nativeNodeHandle" ) );
+		if ( null == mapView || null == mapFragment ) {
+			return;
+		}
+		if ( ! Utils.rMapHasKey( params, "markerLayerUuid" ) ) {
+			return;
+		}
+		ItemizedLayer markerLayer = (ItemizedLayer) layerHelper.getLayers().get( params.getString( "markerLayerUuid" ) );
+		if ( markerLayer == null ) {
+			return;
+		}
+		if ( ! Utils.rMapHasKey( params, "x" ) || ! Utils.rMapHasKey( params, "y" ) ) {
+			return;
+		}
+		String strategy = Utils.rMapHasKey( params, "strategy" ) ? params.getString( "strategy" ) : (String) getConstants().get( "strategy" );
+		int x = params.getInt( "x" );
+		int y = params.getInt( "y" );
+
+		int size = markerLayer.getItemList().size();
+		if ( size == 0 ) {
+			return;
+		}
+		int eventX = x - mapView.map().getWidth() / 2;
+		int eventY = y - mapView.map().getHeight() / 2;
+
+		Viewport mapPosition = mapView.map().viewport();
+
+		Box box = mapPosition.getBBox(null, Tile.SIZE / 2 );
+		box.map2mercator();
+		box.scale( 1E6 );
+
+		int inside = -1;
+
+		// squared dist: 50x50 px ~ 2mm on 400dpi
+		// 20x20 px on baseline mdpi (160dpi)
+		double dist = ( 20 * CanvasAdapter.getScale() ) * ( 20 * CanvasAdapter.getScale() );
+		double distNearest = dist;
+		MarkerInterface itemNearest = null;
+		int i = 0;
+		int iNearest = 0;
+		while ( i < size && (
+			! Objects.equals( strategy, "first" )
+			|| ( Objects.equals( strategy, "first" ) && inside == -1 )
+		) ) {
+			MarkerInterface item = markerLayer.getItemList().get(i);
+			if ( box.contains( item.getPoint().longitudeE6, item.getPoint().latitudeE6 ) ) {
+				mapPosition.toScreenPoint( item.getPoint(), tmpPoint );
+				MarkerSymbol it = item.getMarker();
+				it = null != it ? it : markerLayer.getDefaultMarker();
+				float dx = (float) ( eventX - tmpPoint.x );
+				float dy = (float) ( eventY - tmpPoint.y );
+				if ( it.isInside( dx, dy ) ) {
+					double d = dx * dx + dy * dy;
+					if ( d <= dist ) {
+						inside = i;
+						if ( d <= distNearest ) {
+							iNearest = i;
+							itemNearest = item;
+							distNearest = d;
+						}
+						if ( Objects.equals( strategy, "all" ) || Objects.equals( strategy, "first" ) ) {
+							MarkerItem markerItem = (MarkerItem) item;
+							WritableMap payload = Arguments.createMap();
+							payload.putInt( "index", i );
+							payload.putString( "uuid", markerItem.getUid().toString() );
+							payload.putString( "event", "itemTrigger" );
+							payload.putDouble( "distance", d );
+							emitOnMarkerEvent( payload );
+						}
+					}
+				}
+			}
+			i++;
+		}
+		if ( Objects.equals( strategy, "nearest" ) && null != itemNearest ) {
+			MarkerItem markerItem = (MarkerItem) itemNearest;
+			WritableMap payload = Arguments.createMap();
+			payload.putInt( "index", iNearest );
+			payload.putString( "uuid", markerItem.getUid().toString() );
+			payload.putString( "event", "itemTrigger" );
+			payload.putDouble( "distance", distNearest );
+			emitOnMarkerEvent( payload );
+		}
 	}
 
 	@Override
@@ -102,25 +201,25 @@ public class LayerMarker extends NativeLayerMarkerSpec {
 			// Get params, assign defaults.
 			ReadableMap symbolMap = Utils.rMapHasKey( params, "symbol" ) ? params.getMap( "symbol" ) : (ReadableMap) getConstants().get( "symbol" );
 
-
-
-			ItemizedLayer.OnItemGestureListener<MarkerInterface> listener = new ItemizedLayer.OnItemGestureListener() {
+			org.oscim.layers.marker.ItemizedLayer.OnItemGestureListener<MarkerInterface> listener = new org.oscim.layers.marker.ItemizedLayer.OnItemGestureListener() {
 				@Override
 				public boolean onItemSingleTapUp( int i, Object o ) {
-//					MarkerItem markerItem = (MarkerItem) o;
-//					WritableMap params = new WritableNativeMap();
-//					params.putInt( "index", i );
-//					params.putString( "uuid", markerItem.getUid().toString() );
-//					Utils.sendEvent(  getReactApplicationContext(), "MarkerItemSingleTapUp", params );
+					MarkerItem markerItem = (MarkerItem) o;
+					WritableMap payload = Arguments.createMap();
+					payload.putInt( "index", i );
+					payload.putString( "uuid", markerItem.getUid().toString() );
+					payload.putString( "event", "itemSingleTapUp" );
+					emitOnMarkerEvent( payload );
 					return false;
 				}
 				@Override
 				public boolean onItemLongPress( int i, Object o ) {
-//					MarkerItem markerItem = (MarkerItem) o;
-//					WritableMap params = new WritableNativeMap();
-//					params.putInt( "index", i );
-//					params.putString( "uuid", markerItem.getUid().toString() );
-//					Utils.sendEvent(  getReactApplicationContext(), "MarkerItemLongPress", params );
+					MarkerItem markerItem = (MarkerItem) o;
+					WritableMap payload = Arguments.createMap();
+					payload.putInt( "index", i );
+					payload.putString( "uuid", markerItem.getUid().toString() );
+					payload.putString( "event", "itemLongPress" );
+					emitOnMarkerEvent( payload );
 					return false;
 				}
 			};

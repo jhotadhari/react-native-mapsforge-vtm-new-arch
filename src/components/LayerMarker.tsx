@@ -1,31 +1,44 @@
 /**
  * External dependencies
  */
-import { Children, cloneElement, isValidElement, useEffect, useRef, useState } from 'react';
+import { Children, cloneElement, isValidElement, useEffect, useRef, useState, type RefObject } from 'react';
 import type { EventSubscription } from 'react-native';
-import { omit } from 'lodash-es';
+import { omit, pick } from 'lodash-es';
 
 /**
  * Internal dependencies
  */
 import LayerMarkerModule, {
     type CreateLayerParams,
+	type MarkerEvent,
+	type TriggerParams,
 } from '../NativeModules/NativeLayerMarker';
 
 import type { ErrorBase, EventError, ResponseBase } from '../types';
+import useMarkerEventSubscription from '../compose/useMarkerEventSubscription';
+
+export type TriggerEvent = ( typeof LayerMarkerModule )['triggerEvent'];
 
 export type LayerMarkerProps = {
 	nativeNodeHandle?: CreateLayerParams['nativeNodeHandle'];
 	reactTreeIndex?: CreateLayerParams['reactTreeIndex'];
 	children?: React.ReactNode;
-
 	symbol?: CreateLayerParams['symbol'];
-
 	onCreate?: null | ( ( response: ResponseBase ) => void );
 	onRemove?: null | ( ( response: ResponseBase ) => void );
 	onChange?: null | ( ( response: ResponseBase ) => void );
 	onError?: null | ( ( err: ErrorBase ) => void );
+	onMarkerEvent?: null | ( ( response: MarkerEvent ) => void );
+	onMarkerPress?: null | ( ( response: MarkerEvent ) => void );
+	onMarkerLongPress?: null | ( ( response: MarkerEvent ) => void );
+	onMarkerTrigger?: null | ( ( response: MarkerEvent ) => void );
+	triggerEvent?: RefObject<null | TriggerEvent>;
 };
+
+
+const defaultsTrigger = pick( LayerMarkerModule.getConstants(), [
+	'strategy',
+] );
 
 const LayerMarker = ( {
 	nativeNodeHandle,
@@ -36,6 +49,11 @@ const LayerMarker = ( {
 	onRemove,
 	onChange,
 	onError,
+	onMarkerEvent,
+	onMarkerPress,
+	onMarkerLongPress,
+	onMarkerTrigger,
+	triggerEvent,
 } : LayerMarkerProps ) => {
 
     const errorSubscription = useRef<null | EventSubscription>( null );
@@ -54,6 +72,36 @@ const LayerMarker = ( {
             errorSubscription.current = null;
         };
     }, [] );
+
+    useEffect( () => {
+		const remove = () => {
+			if ( triggerEvent ) {
+				triggerEvent.current = null;
+			}
+        };
+		if ( uuid ) {
+			if ( triggerEvent ) {
+				triggerEvent.current = ( params: TriggerParams ) => {
+					LayerMarkerModule.triggerEvent( {
+						nativeNodeHandle,
+						markerLayerUuid: uuid,
+						...defaultsTrigger,
+						...params,
+					} )
+				};
+			}
+		} else {
+			remove();
+		}
+        return remove;
+    }, [uuid,triggerEvent] );
+
+	useMarkerEventSubscription( {
+		onEvent: onMarkerEvent,
+		onPress: onMarkerPress,
+		onLongPress: onMarkerLongPress,
+		onTrigger: onMarkerTrigger,
+	} );
 
 	const createLayer = () => {
 		setUuid( false );
@@ -141,6 +189,9 @@ LayerMarker.defaults = omit( LayerMarkerModule.getConstants(), [
 	'title',
 	'description',
 	'position',
+	'strategy',
 ] );
+
+LayerMarker.defaultsTrigger = defaultsTrigger;
 
 export default LayerMarker;
