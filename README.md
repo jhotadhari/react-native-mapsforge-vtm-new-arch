@@ -1,28 +1,8 @@
 # react-native-mapsforge-vtm
 
-sdf
+This repo is just to migrate https://github.com/jhotadhari/react-native-mapsforge-vtm to new arch.
 
-## Installation
-
-```sh
-npm install react-native-mapsforge-vtm
-```
-
-## Usage
-
-
-```js
-import { MapsforgeVtmView } from "react-native-mapsforge-vtm";
-
-// ...
-
-<MapsforgeVtmView color="tomato" />
-```
-
-
-## Contributing
-
-See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the repository and the development workflow.
+Once migration is done, everything will be merged into the actual repo and this repo will be deleted.
 
 ## License
 
