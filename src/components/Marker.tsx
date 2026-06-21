@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { omit } from 'lodash-es';
 
 /**
@@ -15,6 +15,7 @@ import {
 	MarkerHotspotPlaces,
 	type MarkerResponse,
 } from '../NativeModules/NativeLayerMarker';
+import type { ErrorBase } from '../types';
 import useMarkerEventSubscription from '../compose/useMarkerEventSubscription';
 
 const Marker = ({
@@ -33,82 +34,132 @@ const Marker = ({
 	onLongPress,
 	onTrigger,
 }: MarkerProps) => {
-	// @ts-ignore
-	const [random, setRandom] = useState<number>(0);
 	const [uuid, setUuid] = useState<null | false | string>(null);
-	const [triggerCreateNew, setTriggerCreateNew] = useState<null | number>(
-		null
-	);
 
-	const create = () => {
-		setUuid(false);
-		if (nativeNodeHandle && markerLayerUuid) {
-			LayerMarkerModule.createMarker({
-				nativeNodeHandle,
-				markerLayerUuid,
-				...(title && { title }),
-				...(description && { description }),
-				...(position && { position }),
-				...(symbol && { symbol }),
-			})
-				.then((response: MarkerResponse) => {
-					setUuid(response.uuid);
-					setRandom(Math.random());
-					triggerCreateNew === null
-						? onCreate
-							? onCreate(response)
-							: null
-						: onChange
-							? onChange(response)
-							: null;
-				})
-				.catch((err: any) => {
-					console.log('ERROR', err);
-					onError ? onError(err) : null;
-				});
-		}
-	};
+	const createMarkerRef = useRef<
+		| undefined
+		| ((options: {
+				triggerOnCreate?: boolean;
+				triggerOnChange?: boolean;
+		  }) => void)
+	>(undefined);
 
 	useEffect(() => {
-		if (uuid === null && nativeNodeHandle && position) {
-			create();
-		}
-		return () => {
-			if (!!uuid && !!markerLayerUuid && nativeNodeHandle) {
-				LayerMarkerModule.removeMarker({
+		createMarkerRef.current = ({
+			triggerOnCreate,
+			triggerOnChange,
+		}: {
+			triggerOnCreate?: boolean;
+			triggerOnChange?: boolean;
+		}) => {
+			setUuid(false);
+			if (nativeNodeHandle && markerLayerUuid && position) {
+				LayerMarkerModule.createMarker({
 					nativeNodeHandle,
 					markerLayerUuid,
-					uuid,
+					...(title && { title }),
+					...(description && { description }),
+					...(position && { position }),
+					...(symbol && { symbol }),
 				})
-					.then((uuid: string) => {
-						onRemove ? onRemove({ uuid, nativeNodeHandle }) : null;
+					.then((response: MarkerResponse) => {
+						setUuid(response.uuid);
+						triggerOnCreate && onCreate ? onCreate(response) : null;
+						triggerOnChange && onChange ? onChange(response) : null;
 					})
-					.catch((err: any) => {
-						console.log('ERROR', err);
+					.catch((err: ErrorBase) => {
+						console.log('ERROR', err.userInfo.errorMsg);
 						onError ? onError(err) : null;
 					});
 			}
 		};
-	}, [!!uuid, triggerCreateNew]);
+	}, [
+		nativeNodeHandle,
+		markerLayerUuid,
+		position,
+		title,
+		description,
+		symbol,
+		onCreate,
+		onChange,
+		onError,
+	]);
+
+	const removeMarkerRef = useRef<
+		| undefined
+		| ((options: { triggerOnRemove?: boolean }) => Promise<boolean>)
+	>(undefined);
 
 	useEffect(() => {
-		if (!!uuid && !!markerLayerUuid && nativeNodeHandle) {
-			LayerMarkerModule.removeMarker({
-				nativeNodeHandle,
-				markerLayerUuid,
-				uuid,
-			})
-				.then(() => {
-					setUuid(null);
-					setTriggerCreateNew(Math.random());
-				})
-				.catch((err: any) => {
-					console.log('ERROR', err);
-					onError ? onError(err) : null;
+		removeMarkerRef.current = ({
+			triggerOnRemove,
+		}: {
+			triggerOnRemove?: boolean;
+		}) => {
+			return new Promise<boolean>((resolve) => {
+				if (uuid && markerLayerUuid && nativeNodeHandle) {
+					LayerMarkerModule.removeMarker({
+						nativeNodeHandle,
+						markerLayerUuid,
+						uuid,
+					})
+						.then((uuid: string) => {
+							triggerOnRemove && onRemove
+								? onRemove({ uuid, nativeNodeHandle })
+								: null;
+							resolve(true);
+						})
+						.catch((err: ErrorBase) => {
+							console.log('ERROR', err.userInfo.errorMsg);
+							onError ? onError(err) : null;
+							resolve(false);
+						});
+				}
+			});
+		};
+	}, [
+		nativeNodeHandle,
+		markerLayerUuid,
+		uuid,
+		onRemove,
+		onError,
+	]);
+
+	useEffect(() => {
+		if (uuid === null && nativeNodeHandle) {
+			createMarkerRef?.current &&
+				createMarkerRef?.current({
+					triggerOnCreate: true,
+					triggerOnChange: false,
 				});
-		} else if (uuid === null && position) {
-			setTriggerCreateNew(Math.random());
 		}
+		return () => {
+			removeMarkerRef?.current &&
+				removeMarkerRef?.current({
+					triggerOnRemove: true,
+				});
+		};
+	}, [
+		nativeNodeHandle,
+		uuid,
+	]);
+
+	useEffect(() => {
+		removeMarkerRef?.current &&
+			removeMarkerRef
+				?.current({
+					triggerOnRemove: false,
+				})
+				.then((success) => {
+					if (success) {
+						setUuid(null);
+						createMarkerRef?.current &&
+							createMarkerRef?.current({
+								triggerOnCreate: false,
+								triggerOnChange: true,
+							});
+					}
+				});
 	}, [
 		position ? position.join(',') : null,
 		symbol ? Object.values(symbol).join('') : null,
