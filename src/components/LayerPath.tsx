@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 /**
  * Internal dependencies
@@ -14,12 +14,10 @@ import type { ErrorBase } from '../types';
 
 const moduleDefaults = LayerPathModule.getConstants();
 
-// console.log('debug moduleDefaults', moduleDefaults); // debug
-
 const LayerPath = ({
 	nativeNodeHandle,
 	coordinates,
-	responseInclude,
+	responseInclude: responseIncludeParams,
 	gestureScreenDistance,
 	reactTreeIndex,
 	style,
@@ -34,64 +32,56 @@ const LayerPath = ({
 	onLongPress,
 	onDoubleTap,
 }: LayerPathProps) => {
-	// @ts-ignore
-	const [random, setRandom] = useState<number>(0);
 	const [uuid, setUuid] = useState<null | false | string>(null);
-	const [triggerCreateNew] = useState<null | number>(null);
 
-	responseInclude = { ...moduleDefaults.responseInclude, ...responseInclude };
-	// style = {...defaultStyle, ...style };
+	const responseInclude = useMemo(
+		() => ({
+			...moduleDefaults.responseInclude,
+			...responseIncludeParams,
+		}),
+		[responseIncludeParams]
+	);
 
 	// const supportsGestures = !! onPress || !! onLongPress || !! onDoubleTap;
 
-	const createLayer = () => {
-		setUuid(false);
-		if (nativeNodeHandle && undefined !== reactTreeIndex) {
-			LayerPathModule.createLayer({
-				nativeNodeHandle,
-				reactTreeIndex,
-				supportsGestures: !!onPress || !!onLongPress || !!onDoubleTap, // onTrigger is different
-				...(coordinates && { coordinates }),
-				...(style && { style }),
-				...(responseInclude && { responseInclude }),
-				...(gestureScreenDistance && { gestureScreenDistance }),
-				...(simplificationTolerance && { simplificationTolerance }),
-			})
-				.then((response: LayerPathResponse) => {
-					setUuid(response.uuid);
-					setRandom(Math.random());
-					triggerCreateNew === null
-						? onCreate
-							? onCreate(response)
-							: null
-						: onChange
-							? onChange(response)
-							: null;
-				})
-				.catch((err: ErrorBase) => {
-					console.log('ERROR', err.userInfo.errorMsg);
-					onError ? onError(err) : null;
-				});
-		}
-	};
+	const createLayerRef = useRef<
+		| undefined
+		| ((options: {
+				triggerOnCreate?: boolean;
+				triggerOnChange?: boolean;
+		  }) => void)
+	>(undefined);
 
 	useEffect(() => {
-		if (
-			uuid === null &&
-			nativeNodeHandle &&
-			coordinates &&
-			coordinates.length > 0
-		) {
-			createLayer();
-		}
-		return () => {
-			if (uuid && nativeNodeHandle) {
-				LayerPathModule.removeLayer({
+		createLayerRef.current = ({
+			triggerOnCreate,
+			triggerOnChange,
+		}: {
+			triggerOnCreate?: boolean;
+			triggerOnChange?: boolean;
+		}) => {
+			setUuid(false);
+			if (
+				nativeNodeHandle &&
+				undefined !== reactTreeIndex &&
+				coordinates &&
+				coordinates.length > 0
+			) {
+				LayerPathModule.createLayer({
 					nativeNodeHandle,
-					uuid,
+					reactTreeIndex,
+					supportsGestures:
+						!!onPress || !!onLongPress || !!onDoubleTap, // onTrigger is different
+					...(coordinates && { coordinates }),
+					...(style && { style }),
+					...(responseInclude && { responseInclude }),
+					...(gestureScreenDistance && { gestureScreenDistance }),
+					...(simplificationTolerance && { simplificationTolerance }),
 				})
-					.then((uuid: string) => {
-						onRemove ? onRemove({ nativeNodeHandle, uuid }) : null;
+					.then((response: LayerPathResponse) => {
+						setUuid(response.uuid);
+						triggerOnCreate && onCreate ? onCreate(response) : null;
+						triggerOnChange && onChange ? onChange(response) : null;
 					})
 					.catch((err: ErrorBase) => {
 						console.log('ERROR', err.userInfo.errorMsg);
@@ -101,8 +91,75 @@ const LayerPath = ({
 		};
 	}, [
 		nativeNodeHandle,
-		!!uuid,
-		triggerCreateNew,
+		reactTreeIndex,
+		coordinates,
+		style,
+		responseInclude,
+		gestureScreenDistance,
+		simplificationTolerance,
+		onPress,
+		onLongPress,
+		onDoubleTap,
+		onCreate,
+		onChange,
+		onError,
+	]);
+
+	const removeLayerRef = useRef<
+		| undefined
+		| ((options: { triggerOnRemove?: boolean }) => Promise<boolean>)
+	>(undefined);
+
+	useEffect(() => {
+		removeLayerRef.current = ({
+			triggerOnRemove,
+		}: {
+			triggerOnRemove?: boolean;
+		}) => {
+			return new Promise<boolean>((resolve) => {
+				if (uuid && nativeNodeHandle) {
+					LayerPathModule.removeLayer({
+						nativeNodeHandle,
+						uuid,
+					})
+						.then((uuid: string) => {
+							triggerOnRemove && onRemove
+								? onRemove({ nativeNodeHandle, uuid })
+								: null;
+							resolve(true);
+						})
+						.catch((err: ErrorBase) => {
+							console.log('ERROR', err.userInfo.errorMsg);
+							onError ? onError(err) : null;
+							resolve(false);
+						});
+				}
+			});
+		};
+	}, [
+		nativeNodeHandle,
+		uuid,
+		onRemove,
+		onError,
+	]);
+
+	useEffect(() => {
+		if (uuid === null && nativeNodeHandle) {
+			createLayerRef?.current &&
+				createLayerRef?.current({
+					triggerOnCreate: true,
+					triggerOnChange: false,
+				});
+		}
+		return () => {
+			removeLayerRef?.current &&
+				removeLayerRef?.current({
+					triggerOnRemove: true,
+				});
+		};
+	}, [
+		nativeNodeHandle,
+		uuid,
 	]);
 
 	// useEffect( () => {
@@ -120,19 +177,19 @@ const LayerPath = ({
 	// }, [Object.values( style ).join( '' )] );
 
 	// useEffect( () => {
-	// 	if ( nativeNodeHandle ) {
-	// 		if ( uuid ) {
-	// 			LayerPathModule.removeLayer(
-	// 				nativeNodeHandle,
-	// 				uuid
-	// 			).then( () => {
-	// 				setUuid( null );
-	// 				setTriggerCreateNew( Math.random() );
-	// 			} ).catch( ( err: ErrorBase ) => { console.log( 'ERROR', err.userInfo.errorMsg ); onError ? onError( err ) : null } );
-	// 		} else if ( uuid === null && ( coordinates.length > 0 ) ) {
-	// 			setTriggerCreateNew( Math.random() );
-	// 		}
-	// 	}
+	// 	removeLayerRef?.current &&
+	// 		removeLayerRef
+	// 			?.current( { triggerOnRemove: false } )
+	// 			.then( ( success ) => {
+	// 				if ( success ) {
+	// 					setUuid( null );
+	// 					createLayerRef?.current &&
+	// 						createLayerRef?.current( {
+	// 							triggerOnCreate: false,
+	// 							triggerOnChange: true,
+	// 						} );
+	// 				}
+	// 			} );
 	// }, [
 	// 	( coordinates.length > 0
 	// 		? [...coordinates].map( pos => pos.join( ',' ) ).join( '' )

@@ -2,6 +2,7 @@ import type { TurboModule } from 'react-native';
 import { TurboModuleRegistry } from 'react-native';
 import type { Double, Int32 } from 'react-native/Libraries/Types/CodegenTypes';
 import type { Position as GeoJsonPosition } from 'geojson';
+import type { ErrorBase } from '../types';
 
 /*
  * Type should be redeclared because of codegen ts parser doesn't allow imported type
@@ -147,7 +148,7 @@ export type LayerPathProps = {
 	onRemove?: null | ((response: ResponseBase) => void);
 	onCreate?: null | ((response: LayerPathResponse) => void);
 	onChange?: null | ((response: LayerPathResponse) => void);
-	onError?: null | ((err: any) => void);
+	onError?: null | ((err: ErrorBase) => void);
 	onPress?: null | ((response: LayerPathGestureResponse) => void);
 	onLongPress?: null | ((response: LayerPathGestureResponse) => void);
 	onDoubleTap?: null | ((response: LayerPathGestureResponse) => void);
