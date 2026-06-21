@@ -19,14 +19,13 @@ import com.facebook.react.bridge.WritableNativeArray;
 import com.facebook.react.bridge.WritableNativeMap;
 import com.facebook.react.module.annotations.ReactModule;
 import com.goebl.simplify.Simplify;
-import com.jhotadhari.reactnative.mapsforge.vtm.Coordinate;
 import com.jhotadhari.reactnative.mapsforge.vtm.LayerHelper;
 import com.jhotadhari.reactnative.mapsforge.vtm.NativeLayerPathSpec;
 import com.jhotadhari.reactnative.mapsforge.vtm.Utils;
 import com.jhotadhari.reactnative.mapsforge.vtm.layer.VectorLayer;
 import com.jhotadhari.reactnative.mapsforge.vtm.views.MapFragment;
 
-import org.joda.time.DateTime;
+import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
@@ -38,22 +37,11 @@ import org.oscim.backend.canvas.Paint;
 import org.oscim.core.GeoPoint;
 import org.oscim.layers.vector.geometries.LineDrawable;
 import org.oscim.layers.vector.geometries.Style;
-import org.xmlpull.v1.XmlPullParserException;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URISyntaxException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
-
-import io.ticofab.androidgpxparser.parser.GPXParser;
-import io.ticofab.androidgpxparser.parser.domain.Gpx;
-import io.ticofab.androidgpxparser.parser.domain.TrackPoint;
 
 @ReactModule( name = LayerPath.NAME )
 public class LayerPath extends NativeLayerPathSpec {
@@ -160,7 +148,7 @@ public class LayerPath extends NativeLayerPathSpec {
 		return styleBuilder;
 	}
 
-	protected static Coordinate[] readableArrayToJtsCoordinates( ReadableArray coordinates, float simplificationToloerance ) {
+	protected static Coordinate[] readableArrayToJtsCoordinates( ReadableArray coordinates, float simplificationTolerance ) {
 		Coordinate[] jtsCoordinates = new Coordinate[coordinates.size()];
 		for ( int i = 0; i < coordinates.size(); i++ ) {
 			ReadableType readableType = coordinates.getType( i );
@@ -173,62 +161,6 @@ public class LayerPath extends NativeLayerPathSpec {
 					null != alt ? alt : 0
 				);
 			}
-		}
-		if ( simplificationToloerance > 0 ) {
-			Simplify<Coordinate> simplify = new Simplify<Coordinate>( new Coordinate[0] );
-			jtsCoordinates = simplify.simplify( jtsCoordinates, simplificationToloerance, true );
-		}
-		return jtsCoordinates;
-	}
-
-	protected Coordinate[] loadGpxToJtsCoordinates( Context context, String filePath, float simplificationTolerance, Promise promise ) throws URISyntaxException, IOException {
-		Coordinate[] jtsCoordinates = new Coordinate[0];
-
-		InputStream in = null;
-		if ( filePath.startsWith( "content://" ) ) {
-			DocumentFile dir = DocumentFile.fromSingleUri( context, Uri.parse( filePath ) );
-			if ( dir == null || ! dir.exists() || ! dir.isFile() ) {
-				return null;
-			}
-			if ( ! Utils.hasScopedStoragePermission( context, filePath, false ) ) {
-				promise.reject( "Error", "No scoped storage read permission for filePath " + filePath ); return null;
-			}
-			in = context.getContentResolver().openInputStream( Uri.parse( filePath ) );
-			assert in != null;
-		}
-
-		if ( filePath.startsWith( "/" ) ) {
-			File gpxFile = new File( filePath );
-			if( ! gpxFile.exists() || ! gpxFile.isFile() || ! gpxFile.canRead() ) {
-				return null;
-			}
-			in = new FileInputStream( gpxFile );
-		}
-		if( in == null ) {
-			return null;
-		}
-
-		GPXParser parser = new GPXParser();
-		Gpx parsedGpx = null;
-		try {
-			parsedGpx = parser.parse( in );
-		} catch ( IOException | XmlPullParserException e ) {
-			e.printStackTrace();
-			promise.reject( "Error", e ); return jtsCoordinates;
-		}
-		if ( parsedGpx == null ) {
-			promise.reject( "Error", "Unable to parse gpx file: " + filePath ); return jtsCoordinates;
-		}
-		List<TrackPoint> points = parsedGpx.getTracks().get(0).getTrackSegments().get(0).getTrackPoints();
-		jtsCoordinates = new Coordinate[points.size()];
-		for ( int i = 0; i < points.size(); i++) {
-			TrackPoint point = (TrackPoint) points.get( i );
-			jtsCoordinates[i] = new Coordinate(
-				point.getLongitude(),
-				point.getLatitude(),
-				point.getElevation(),
-				point.getTime()
-			);
 		}
 		if ( simplificationTolerance > 0 ) {
 			Simplify<Coordinate> simplify = new Simplify<Coordinate>( new Coordinate[0] );
@@ -256,7 +188,6 @@ public class LayerPath extends NativeLayerPathSpec {
 			ReadableArray coordinates = Utils.rMapHasKey( params, "coordinates" ) ? params.getArray( "coordinates" ) : null;
 			ReadableMap responseInclude = Utils.rMapHasKey( params, "responseInclude" ) ? params.getMap( "responseInclude" ) : (ReadableMap) getConstants().get( "responseInclude" );
 			ReadableMap style = Utils.rMapHasKey( params, "style" ) ? params.getMap( "style" ) : (ReadableMap) getConstants().get( "style" );
-			String filePath = Utils.rMapHasKey( params, "filePath" ) ? params.getString( "filePath" ) : null;
 
 			String uuid = UUID.randomUUID().toString();
 
@@ -280,11 +211,9 @@ public class LayerPath extends NativeLayerPathSpec {
 			Coordinate[] jtsCoordinates = new Coordinate[0];
 			if ( null != coordinates && coordinates.size() > 0 ) {
 				jtsCoordinates = readableArrayToJtsCoordinates( coordinates, (float) simplificationTolerance );
-			} else if ( filePath != null && filePath.length() > 0 && filePath.endsWith( ".gpx" ) ) {
-				jtsCoordinates = loadGpxToJtsCoordinates( mapView.getContext(), filePath, (float) simplificationTolerance, promise );
 			}
 			if ( null == jtsCoordinates || jtsCoordinates.length == 0 ) {
-				promise.reject( "Error", "Unable to parse coordinates or gpx file" ); return;
+				promise.reject( "Error", "Unable to parse coordinates" ); return;
 			}
 
 			// Store coordinates
@@ -495,39 +424,16 @@ public class LayerPath extends NativeLayerPathSpec {
 	) {
 		if ( null != jtsCoordinates && jtsCoordinates.length > 0 && ! responseParams.hasKey( "coordinates" ) ) {
 			WritableArray coordinatesResponseArray = new WritableNativeArray();
-			double accumulatedDistance = 0;
 			for (int i = 0; i < jtsCoordinates.length; i++) {
-				double distanceToLast = i == 0
-					? 0
-					: new GeoPoint(
-					(double) jtsCoordinates[i].y,
-					(double) jtsCoordinates[i].x
-				).sphericalDistance( new GeoPoint(
-					(double) jtsCoordinates[i-1].y,
-					(double) jtsCoordinates[i-1].x
+				coordinatesResponseArray.pushArray(  Utils.positionToWritableArray(
+					jtsCoordinates[i].x,
+					jtsCoordinates[i].y,
+					jtsCoordinates[i].z
 				) );
-				accumulatedDistance += distanceToLast;
-				WritableMap position = getResponsePositionFromJtsCoordinate( jtsCoordinates[i], accumulatedDistance );
-				coordinatesResponseArray.pushMap( position );
 			}
 			// Add to responseParams.
 			responseParams.putArray( "coordinates", coordinatesResponseArray );
 		}
-	}
-
-	protected WritableMap getResponsePositionFromJtsCoordinate( Coordinate coordinate, double accumulatedDistance ){
-		WritableMap pathCoordinate = new WritableNativeMap();
-		pathCoordinate.putArray( "position", Utils.positionToWritableArray(
-			(double) coordinate.x,
-			(double) coordinate.y,
-			(double) coordinate.z
-		) );
-		pathCoordinate.putDouble( "distance", (double) accumulatedDistance );
-		DateTime time = coordinate.dateTime;
-		if ( null != time ) {
-			pathCoordinate.putDouble( "time", (double) ( time.getMillis() / 1000L ) );
-		}
-		return pathCoordinate;
 	}
 
 	@Override

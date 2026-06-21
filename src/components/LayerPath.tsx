@@ -14,12 +14,11 @@ import type { ErrorBase } from '../types';
 
 const moduleDefaults = LayerPathModule.getConstants();
 
-console.log('debug moduleDefaults', moduleDefaults); // debug
+// console.log('debug moduleDefaults', moduleDefaults); // debug
 
 const LayerPath = ({
 	nativeNodeHandle,
 	coordinates,
-	filePath,
 	responseInclude,
 	gestureScreenDistance,
 	reactTreeIndex,
@@ -53,7 +52,6 @@ const LayerPath = ({
 				reactTreeIndex,
 				supportsGestures: !!onPress || !!onLongPress || !!onDoubleTap, // onTrigger is different
 				...(coordinates && { coordinates }),
-				...(filePath && { filePath }),
 				...(style && { style }),
 				...(responseInclude && { responseInclude }),
 				...(gestureScreenDistance && { gestureScreenDistance }),
@@ -81,7 +79,8 @@ const LayerPath = ({
 		if (
 			uuid === null &&
 			nativeNodeHandle &&
-			(filePath || (coordinates && coordinates.length > 0))
+			coordinates &&
+			coordinates.length > 0
 		) {
 			createLayer();
 		}
@@ -130,7 +129,7 @@ const LayerPath = ({
 	// 				setUuid( null );
 	// 				setTriggerCreateNew( Math.random() );
 	// 			} ).catch( ( err: ErrorBase ) => { console.log( 'ERROR', err.userInfo.errorMsg ); onError ? onError( err ) : null } );
-	// 		} else if ( uuid === null && ( filePath || coordinates.length > 0 ) ) {
+	// 		} else if ( uuid === null && ( coordinates.length > 0 ) ) {
 	// 			setTriggerCreateNew( Math.random() );
 	// 		}
 	// 	}
@@ -140,7 +139,6 @@ const LayerPath = ({
 	// 		: null
 	// 	),
 	// 	simplificationTolerance,
-	// 	filePath,
 	// 	Object.keys( responseInclude ).map( key => key + responseInclude[key] ).join( '' ),
 	// ] );
 

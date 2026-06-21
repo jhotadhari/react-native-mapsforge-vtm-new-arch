@@ -60,7 +60,6 @@ interface CreateLayerParams extends ModuleParams {
 	nativeNodeHandle?: Int32;
 	reactTreeIndex?: Int32;
 	coordinates?: ReadonlyArray<Position>; // geojson LineString-style `coordinates`
-	filePath?: string;
 	supportsGestures?: boolean;
 }
 
@@ -119,19 +118,13 @@ export type Bounds = {
 	maxLng: Double;
 };
 
-export interface PathCoordinate {
-	position: Position; // [ lng, lat, alt? ]
-	distance?: Double;
-	time?: Double;
-}
-
 interface ResponseBase {
 	uuid: string;
 	nativeNodeHandle: Int32;
 }
 
 export interface LayerPathResponse extends ResponseBase {
-	coordinates?: PathCoordinate[];
+	coordinates?: Position[];
 	bounds?: Bounds;
 }
 
