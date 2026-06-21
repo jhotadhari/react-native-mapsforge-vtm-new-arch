@@ -230,8 +230,10 @@ public class MapFragment extends Fragment {
 				try {
 					layer.getClass().getMethod("onPause").invoke( layer );
 				} catch ( NoSuchMethodException | InvocationTargetException | IllegalAccessException e ) {
-					e.printStackTrace();
-					emitError( e.getMessage() );
+					if ( !( e instanceof NoSuchMethodException ) ) {
+						e.printStackTrace();
+						emitError( e.getMessage() );
+					}
 				}
 			}
 		}
@@ -248,8 +250,10 @@ public class MapFragment extends Fragment {
 				try {
 					layer.getClass().getMethod("onResume").invoke( layer );
 				} catch ( NoSuchMethodException | InvocationTargetException | IllegalAccessException e ) {
-					e.printStackTrace();
-					emitError( e.getMessage() );
+					if ( !( e instanceof NoSuchMethodException ) ) {
+						e.printStackTrace();
+						emitError( e.getMessage() );
+					}
 				}
 			}
 		}
