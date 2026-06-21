@@ -3,6 +3,7 @@ package com.jhotadhari.reactnative.mapsforge.vtm;
 import androidx.annotation.NonNull;
 
 import com.facebook.react.BaseReactPackage;
+import com.facebook.react.ReactPackage;
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.module.model.ReactModuleInfo;
@@ -19,7 +20,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class MapsforgeVtmViewPackage extends BaseReactPackage {
+// "implements ReactPackage" is redundant (BaseReactPackage already implements it) but required
+// for the react-native CLI's autolinking regex to detect this as the module's package class.
+public class MapsforgeVtmViewPackage extends BaseReactPackage implements ReactPackage {
 
 	@NonNull
 	@Override
