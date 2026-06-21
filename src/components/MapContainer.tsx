@@ -8,6 +8,9 @@ import {
 	useState,
 	Children,
 	isValidElement,
+	useMemo,
+	type ReactNode,
+	useCallback,
 } from 'react';
 import { findNodeHandle, useWindowDimensions, View } from 'react-native';
 import { get, isBoolean } from 'lodash-es';
@@ -54,7 +57,7 @@ const MapContainer = ({
 	hgtInterpolation = moduleDefaults.hgtInterpolation,
 	hgtReadFileRate = moduleDefaults.hgtReadFileRate,
 	hgtFileInfoPurgeThreshold = moduleDefaults.hgtFileInfoPurgeThreshold,
-	responseInclude = moduleDefaults.responseInclude,
+	responseInclude: responseIncludeParams = moduleDefaults.responseInclude,
 	mapEventRate = moduleDefaults.mapEventRate,
 	emitsMapUpdateEvents = moduleDefaults.emitsMapUpdateEvents,
 	onMapUpdate,
@@ -85,45 +88,59 @@ const MapContainer = ({
 		}
 	}, [ref?.current]);
 
-	let lastIndex = 0; // It starts with the MapFragment event layer. Otherwise it would be -1 here.
-	const wrapChildren = (children: React.ReactNode): null | React.ReactNode =>
-		!children || !findNodeHandle(ref?.current)
-			? null
-			: Children.map(children, (child) => {
-					let newChild = child;
+	const wrappedChildren = useMemo(() => {
+		let lastIndex = 0; // It starts with the MapFragment event layer. Otherwise it would be -1 here.
+		const wrapChildren = (children: ReactNode): null | ReactNode =>
+			!children || !findNodeHandle(ref?.current)
+				? null
+				: Children.map(children, (child) => {
+						let newChild = child;
 
-					if (
-						!isValidElement<{ children?: React.ReactNode }>(child)
-					) {
+						if (!isValidElement<{ children?: ReactNode }>(child)) {
+							return newChild;
+						}
+
+						const type = get(child, 'type');
+						if (!type || !type.valueOf) {
+							return newChild;
+						}
+						const isMapLayer = get(type.valueOf(), 'isMapLayer');
+
+						lastIndex = isMapLayer ? lastIndex + 1 : lastIndex;
+						newChild =
+							child && type
+								? cloneElement(child, {
+										...{ nativeNodeHandle },
+										...(isMapLayer
+											? { reactTreeIndex: lastIndex }
+											: {}),
+										...(child?.props?.children && {
+											children: wrapChildren(
+												child.props.children
+											),
+										}),
+									})
+								: child;
+
 						return newChild;
-					}
+					});
+		return wrapChildren(children);
+	}, [
+		children,
+		nativeNodeHandle,
+	]);
 
-					const type = get(child, 'type');
-					if (!type || !type.valueOf) {
-						return newChild;
-					}
-					const isMapLayer = get(type.valueOf(), 'isMapLayer');
+	const handleMapCreated = useCallback(() => {
+		setMapCreated(true);
+	}, []);
 
-					lastIndex = isMapLayer ? lastIndex + 1 : lastIndex;
-					newChild =
-						child && type
-							? cloneElement(child, {
-									...{ nativeNodeHandle },
-									...(isMapLayer
-										? { reactTreeIndex: lastIndex }
-										: {}),
-									...(child?.props?.children && {
-										children: wrapChildren(
-											child.props.children
-										),
-									}),
-								})
-							: child;
-
-					return newChild;
-				});
-
-	const wrappedChildren = wrapChildren(children);
+	const responseInclude = useMemo(
+		() => ({
+			...moduleDefaults.responseInclude,
+			...responseIncludeParams,
+		}),
+		[responseIncludeParams]
+	);
 
 	return (
 		<View>
@@ -154,17 +171,14 @@ const MapContainer = ({
 				hgtFileInfoPurgeThreshold={Math.round(
 					hgtFileInfoPurgeThreshold
 				)}
-				responseInclude={{
-					...moduleDefaults.responseInclude,
-					...responseInclude,
-				}}
+				responseInclude={responseInclude}
 				mapEventRate={Math.round(mapEventRate)}
 				emitsMapUpdateEvents={
 					isBoolean(emitsMapUpdateEvents)
 						? emitsMapUpdateEvents
 						: !!onMapUpdate
 				}
-				onMapCreated={() => setMapCreated(true)}
+				onMapCreated={handleMapCreated}
 				onMapUpdate={onMapUpdate ? onMapUpdate : null}
 				onPause={onPause ? onPause : null}
 				onResume={onResume ? onResume : null}

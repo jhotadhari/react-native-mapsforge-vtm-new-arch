@@ -18,6 +18,7 @@ import {
 	type Position,
 	// type MapError,
 	MapContainerTypes,
+	type MapEventResponse,
 } from 'react-native-mapsforge-vtm';
 // import Marker from '../../src/components/Marker';
 // import type { MarkerEvent } from '../../src/NativeModules/NativeLayerMarker';
@@ -175,12 +176,12 @@ export default function App() {
 					//   console.log( 'debug onMapUpdate', response?.nativeEvent ); // debug
 					//   setMapState( response?.nativeEvent );
 					// } }
-					// onPause={ ( response: NativeSyntheticEvent<Readonly<MapEventResponse>> ) => {
-					//   console.log( 'debug onPause', response?.nativeEvent ); // debug
-					// } }
-					// onResume={ ( response: NativeSyntheticEvent<Readonly<MapEventResponse>> ) => {
-					//   console.log( 'debug onResume', response?.nativeEvent ); // debug
-					// } }
+					onPause={ ( response: NativeSyntheticEvent<Readonly<MapEventResponse>> ) => {
+					  console.log( 'debug onPause', response?.nativeEvent ); // debug
+					} }
+					onResume={ ( response: NativeSyntheticEvent<Readonly<MapEventResponse>> ) => {
+					  console.log( 'debug onResume', response?.nativeEvent ); // debug
+					} }
 					onError={(
 						response: NativeSyntheticEvent<
 							Readonly<MapContainerTypes.MapError>

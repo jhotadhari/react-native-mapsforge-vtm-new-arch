@@ -44,3 +44,4 @@ export {
 };
 
 export type * from './types';
+export type * from './NativeViews/MapsforgeVtmViewNativeComponent';
