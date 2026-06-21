@@ -84,11 +84,12 @@ public class VectorLayer extends org.oscim.layers.vector.VectorLayer {
 				// Add type
 				params.putString( "type", type );
 				// Add eventPosition
-				WritableMap eventPosition = new WritableNativeMap();
 				GeoPoint eventPoint = mMap.viewport().fromScreenPoint( e.getX(), e.getY() );
-				eventPosition.putDouble("lng", eventPoint.getLongitude() );
-				eventPosition.putDouble("lat", eventPoint.getLatitude() );
-				params.putMap( "eventPosition", eventPosition );
+				params.putArray( "eventPosition", Utils.positionToWritableArray(
+					eventPoint.getLongitude(),
+					eventPoint.getLatitude(),
+					null
+				) );
 				// sendEvent
 //				Utils.sendEvent( mReactContext, mGestureEventName, params );
 				return true;
@@ -108,11 +109,12 @@ public class VectorLayer extends org.oscim.layers.vector.VectorLayer {
 				// Distance
 				params.putDouble( "distance", drawable.getGeometry().distance( point ) );
 				// Nearest point
-				WritableMap nearestPoint = new WritableNativeMap();
 				org.locationtech.jts.geom.Coordinate[] nearestPoints = DistanceOp.nearestPoints( drawable.getGeometry(), point);
-				nearestPoint.putDouble("lng", nearestPoints[0].x );
-				nearestPoint.putDouble("lat", nearestPoints[0].y );
-				params.putMap( "nearestPoint", nearestPoint );
+				params.putArray( "nearestPoint", Utils.positionToWritableArray(
+					nearestPoints[0].x,
+					nearestPoints[0].y,
+					null
+				) );
 				return params;
 			}
 		}

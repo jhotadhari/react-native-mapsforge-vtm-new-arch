@@ -10,6 +10,7 @@ import androidx.documentfile.provider.DocumentFile;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableNativeMap;
@@ -277,7 +278,7 @@ public class LayerMarker extends NativeLayerMarkerSpec {
 		if ( ! Utils.rMapHasKey( params, "position" ) ) {
 			Utils.promiseReject( promise,"Marker does not have a position" ); return;
 		}
-		ReadableMap position = params.getMap( "position" );
+		ReadableArray position = params.getArray( "position" );
 		// Create Marker.
 		String uuid = UUID.randomUUID().toString();
 		MarkerItem markerItem = new MarkerItem(
@@ -285,8 +286,8 @@ public class LayerMarker extends NativeLayerMarkerSpec {
 			title,
 			description,
 			new GeoPoint(
-				position.getDouble( "lat" ),
-				position.getDouble( "lng" )
+				Utils.latFromPosition( position ),
+				Utils.lngFromPosition( position )
 			)
 		);
 		// Maybe get symbol.

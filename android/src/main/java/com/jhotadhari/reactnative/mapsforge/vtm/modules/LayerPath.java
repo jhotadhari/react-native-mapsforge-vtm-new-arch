@@ -160,16 +160,17 @@ public class LayerPath extends NativeLayerPathSpec {
 		return styleBuilder;
 	}
 
-	protected static Coordinate[] readableArrayToJtsCoordinates( ReadableArray positions, float simplificationToloerance ) {
-		Coordinate[] jtsCoordinates = new Coordinate[positions.size()];
-		for ( int i = 0; i < positions.size(); i++ ) {
-			ReadableType readableType = positions.getType( i );
-			if ( readableType == ReadableType.Map ) {
-				ReadableMap position = positions.getMap( i );
+	protected static Coordinate[] readableArrayToJtsCoordinates( ReadableArray coordinates, float simplificationToloerance ) {
+		Coordinate[] jtsCoordinates = new Coordinate[coordinates.size()];
+		for ( int i = 0; i < coordinates.size(); i++ ) {
+			ReadableType readableType = coordinates.getType( i );
+			if ( readableType == ReadableType.Array ) {
+				ReadableArray position = coordinates.getArray( i );
+				Double alt = Utils.altFromPosition( position );
 				jtsCoordinates[i] = new Coordinate(
-					(double) position.getDouble( "lng" ),
-					(double) position.getDouble( "lat" ),
-					(double) ( position.hasKey( "alt" ) ? position.getDouble( "alt" ) : 0 )
+					Utils.lngFromPosition( position ),
+					Utils.latFromPosition( position ),
+					null != alt ? alt : 0
 				);
 			}
 		}
@@ -252,7 +253,7 @@ public class LayerPath extends NativeLayerPathSpec {
 			boolean supportsGestures = Utils.rMapHasKey( params, "supportsGestures" ) && params.getBoolean( "supportsGestures" );
 			double gestureScreenDistance = Utils.rMapHasKey( params, "gestureScreenDistance" ) ? params.getDouble( "gestureScreenDistance" ) : (double) getConstants().get( "gestureScreenDistance" );
 			double simplificationTolerance = Utils.rMapHasKey( params, "simplificationTolerance" ) ? params.getDouble( "simplificationTolerance" ) : (double) getConstants().get( "simplificationTolerance" );
-			ReadableArray positions = Utils.rMapHasKey( params, "positions" ) ? params.getArray( "positions" ) : null;
+			ReadableArray coordinates = Utils.rMapHasKey( params, "coordinates" ) ? params.getArray( "coordinates" ) : null;
 			ReadableMap responseInclude = Utils.rMapHasKey( params, "responseInclude" ) ? params.getMap( "responseInclude" ) : (ReadableMap) getConstants().get( "responseInclude" );
 			ReadableMap style = Utils.rMapHasKey( params, "style" ) ? params.getMap( "style" ) : (ReadableMap) getConstants().get( "style" );
 			String filePath = Utils.rMapHasKey( params, "filePath" ) ? params.getString( "filePath" ) : null;
@@ -277,13 +278,13 @@ public class LayerPath extends NativeLayerPathSpec {
 
 			// Convert input params to jtsCoordinates
 			Coordinate[] jtsCoordinates = new Coordinate[0];
-			if ( null != positions && positions.size() > 0 ) {
-				jtsCoordinates = readableArrayToJtsCoordinates( positions, (float) simplificationTolerance );
+			if ( null != coordinates && coordinates.size() > 0 ) {
+				jtsCoordinates = readableArrayToJtsCoordinates( coordinates, (float) simplificationTolerance );
 			} else if ( filePath != null && filePath.length() > 0 && filePath.endsWith( ".gpx" ) ) {
 				jtsCoordinates = loadGpxToJtsCoordinates( mapView.getContext(), filePath, (float) simplificationTolerance, promise );
 			}
 			if ( null == jtsCoordinates || jtsCoordinates.length == 0 ) {
-				promise.reject( "Error", "Unable to parse positions or gpx file" ); return;
+				promise.reject( "Error", "Unable to parse coordinates or gpx file" ); return;
 			}
 
 			// Store coordinates
@@ -515,16 +516,18 @@ public class LayerPath extends NativeLayerPathSpec {
 	}
 
 	protected WritableMap getResponsePositionFromJtsCoordinate( Coordinate coordinate, double accumulatedDistance ){
-		WritableMap position = new WritableNativeMap();
-		position.putDouble( "lng", (double) coordinate.x );
-		position.putDouble( "lat", (double) coordinate.y );
-		position.putDouble( "alt", (double) coordinate.z );
-		position.putDouble( "distance", (double) accumulatedDistance );
+		WritableMap pathCoordinate = new WritableNativeMap();
+		pathCoordinate.putArray( "position", Utils.positionToWritableArray(
+			(double) coordinate.x,
+			(double) coordinate.y,
+			(double) coordinate.z
+		) );
+		pathCoordinate.putDouble( "distance", (double) accumulatedDistance );
 		DateTime time = coordinate.dateTime;
 		if ( null != time ) {
-			position.putDouble( "time", (double) ( time.getMillis() / 1000L ) );
+			pathCoordinate.putDouble( "time", (double) ( time.getMillis() / 1000L ) );
 		}
-		return position;
+		return pathCoordinate;
 	}
 
 	@Override

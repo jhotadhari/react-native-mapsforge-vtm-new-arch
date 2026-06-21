@@ -9,6 +9,7 @@ import com.facebook.react.bridge.WritableNativeArray;
 import com.facebook.react.bridge.WritableNativeMap;
 import com.facebook.react.module.annotations.ReactModule;
 import com.jhotadhari.reactnative.mapsforge.vtm.NativeMapContainerSpec;
+import com.jhotadhari.reactnative.mapsforge.vtm.Utils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -33,10 +34,7 @@ public class MapContainer extends NativeMapContainerSpec {
 		final Map<String, Object> constants = new HashMap<>();
 		constants.put( "width", null );
 		constants.put( "height", 200 );
-		WritableMap center = new WritableNativeMap();
-		center.putDouble( "lng", -77.605 );
-		center.putDouble( "lat", -9.118 );
-		constants.put( "center", center );
+		constants.put( "center", Utils.positionToWritableArray( -77.605, -9.118, null ) );
 		constants.put( "zoomLevel", 12 );
 		constants.put( "zoomMin", 1 );
 		constants.put( "zoomMax", 20 );

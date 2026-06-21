@@ -5,13 +5,17 @@ import android.content.UriPermission;
 import android.content.res.Resources;
 import android.util.DisplayMetrics;
 
+import androidx.annotation.Nullable;
 import androidx.fragment.app.FragmentActivity;
 
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContext;
+import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.bridge.WritableNativeArray;
 import com.facebook.react.bridge.WritableNativeMap;
 import com.jhotadhari.reactnative.mapsforge.vtm.views.MapFragment;
 
@@ -146,6 +150,37 @@ public class Utils {
 	 */
 	public static boolean rMapHasKey( ReadableMap args, String key ) {
 		return args.hasKey( key ) && ! args.isNull( key );
+	}
+
+	/**
+	 * Build a geojson style `Position`, ie `[ lng, lat, alt? ]`.
+	 *
+	 * @param lng	Longitude
+	 * @param lat	Latitude
+	 * @param alt	Altitude. Omitted from the array when null.
+	 * @return WritableArray
+	 */
+	public static WritableArray positionToWritableArray( double lng, double lat, Double alt ) {
+		WritableArray position = new WritableNativeArray();
+		position.pushDouble( lng );
+		position.pushDouble( lat );
+		if ( null != alt ) {
+			position.pushDouble( alt );
+		}
+		return position;
+	}
+
+	public static double lngFromPosition( ReadableArray position ) {
+		return position.getDouble( 0 );
+	}
+
+	public static double latFromPosition( ReadableArray position ) {
+		return position.getDouble( 1 );
+	}
+
+	@Nullable
+	public static Double altFromPosition( ReadableArray position ) {
+		return position.size() > 2 ? position.getDouble( 2 ) : null;
 	}
 
 }

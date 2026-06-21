@@ -2,8 +2,6 @@ package com.jhotadhari.reactnative.mapsforge.vtm;
 
 import android.os.Build;
 
-import com.facebook.react.bridge.ReadableMap;
-
 import org.mapsforge.map.layer.hills.AThreadedHillShading;
 import org.mapsforge.map.layer.hills.DemFile;
 import org.mapsforge.map.layer.hills.DemFolder;
@@ -236,10 +234,8 @@ public class HgtReader {
 	 * Mostly copy of hhtznr.josm.plugins.elevation.data.SRTMTile.getLatLonEle, just some adjustments to fit it into here.
 	 * See https://github.com/hhtznr/JOSM-Elevation-Plugin/blob/02ed9e66ed0db1857eabbfbe2a61032588372958/src/hhtznr/josm/plugins/elevation/data/SRTMTile.java#L455
 	 */
-	public Short getAltitudeAtPosition( ReadableMap center, boolean useRateLimiter ) {
+	public Short getAltitudeAtPosition( double lng, double lat, boolean useRateLimiter ) {
 		Short altitude = null;
-		double lng = center.getDouble( "lng" );
-		double lat = center.getDouble( "lat" );
 		try {
 			Map<TileKey, HgtFileInfo> hgtFileInfoMap = hgtFiles.get();
 			if ( ! hgtFileInfoMap.isEmpty() ) {

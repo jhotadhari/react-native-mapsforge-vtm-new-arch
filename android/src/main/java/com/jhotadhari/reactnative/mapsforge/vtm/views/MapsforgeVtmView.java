@@ -12,6 +12,7 @@ import androidx.annotation.Nullable;
 import androidx.documentfile.provider.DocumentFile;
 import androidx.fragment.app.FragmentActivity;
 
+import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.uimanager.ThemedReactContext;
@@ -36,7 +37,7 @@ public class MapsforgeVtmView extends LinearLayout {
 
 	private double width;	// dp
 	private double height;	// dp
-	private ReadableMap center;
+	private ReadableArray center;	// Position: [ lng, lat, alt? ]
 	private int zoomLevel;
 	private int zoomMin;
 	private int zoomMax;
@@ -105,7 +106,7 @@ public class MapsforgeVtmView extends LinearLayout {
 		return dimension;
 	}
 
-	public void setCenter( @Nullable ReadableMap center ) {
+	public void setCenter( @Nullable ReadableArray center ) {
 		if ( null != center ) {
 			this.center = center;
 			if ( null != mapFragment ) {
@@ -114,7 +115,7 @@ public class MapsforgeVtmView extends LinearLayout {
 		}
 	}
 
-	public ReadableMap getCenter() {
+	public ReadableArray getCenter() {
 		return center;
 	}
 

@@ -11,9 +11,9 @@ import androidx.fragment.app.Fragment;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableMap;
-import com.facebook.react.bridge.WritableNativeMap;
 import com.jhotadhari.reactnative.mapsforge.vtm.FixedWindowRateLimiter;
 import com.jhotadhari.reactnative.mapsforge.vtm.R;
+import com.jhotadhari.reactnative.mapsforge.vtm.Utils;
 
 import org.oscim.android.MapView;
 import org.oscim.core.MapPosition;
@@ -138,18 +138,16 @@ public class MapFragment extends Fragment {
 		}
 		// center
 		if ( responseInclude.getInt( "center" ) >= includeLevel ) {
-			WritableMap center = new WritableNativeMap();
-			center.putDouble("lng", mapPosition.getLongitude());
-			center.putDouble("lat", mapPosition.getLatitude());
+			double lng = mapPosition.getLongitude();
+			double lat = mapPosition.getLatitude();
+			Double alt = null;
 			if ( null != getMapsforgeVtmView().getHgtReader() ) {
-				Short altitude = getMapsforgeVtmView().getHgtReader().getAltitudeAtPosition( center, true );
-				if ( null == altitude ) {
-					center.putNull("alt");
-				} else {
-					center.putDouble("alt", altitude.doubleValue() );
+				Short altitude = getMapsforgeVtmView().getHgtReader().getAltitudeAtPosition( lng, lat, true );
+				if ( null != altitude ) {
+					alt = altitude.doubleValue();
 				}
 			}
-			payload.putMap("center", center);
+			payload.putArray( "center", Utils.positionToWritableArray( lng, lat, alt ) );
 		}
 		return payload;
 	}
@@ -157,8 +155,8 @@ public class MapFragment extends Fragment {
 	public void updateCenter() {
 		if ( null != mapView && null != getMapsforgeVtmView() ) {
 			mapView.map().setMapPosition( new MapPosition(
-				getMapsforgeVtmView().getCenter().getDouble( "lat" ),
-				getMapsforgeVtmView().getCenter().getDouble( "lng" ),
+				Utils.latFromPosition( getMapsforgeVtmView().getCenter() ),
+				Utils.lngFromPosition( getMapsforgeVtmView().getCenter() ),
 				mapView.map().getMapPosition().getScale()
 			) );
 		}

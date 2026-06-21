@@ -3,6 +3,7 @@ package com.jhotadhari.reactnative.mapsforge.vtm.views;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.react.uimanager.SimpleViewManager;
@@ -58,7 +59,7 @@ public class MapsforgeVtmViewManager extends SimpleViewManager<MapsforgeVtmView>
 
 	@ReactProp( name = "center" )
 	@Override
-	public void setCenter( MapsforgeVtmView view, @Nullable ReadableMap value ) {
+	public void setCenter( MapsforgeVtmView view, @Nullable ReadableArray value ) {
 		if ( null != value && view != null ) {
 			view.setCenter( value );
 		}
