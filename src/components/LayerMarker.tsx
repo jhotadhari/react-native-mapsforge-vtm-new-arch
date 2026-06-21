@@ -1,7 +1,14 @@
 /**
  * External dependencies
  */
-import { Children, cloneElement, isValidElement, useEffect, useRef, useState } from 'react';
+import {
+	Children,
+	cloneElement,
+	isValidElement,
+	useEffect,
+	useRef,
+	useState,
+} from 'react';
 import type { EventSubscription } from 'react-native';
 import { omit, pick } from 'lodash-es';
 
@@ -16,11 +23,9 @@ import LayerMarkerModule, {
 import type { ErrorBase, EventError } from '../types';
 import useMarkerEventSubscription from '../compose/useMarkerEventSubscription';
 
-const defaultsTrigger = pick( LayerMarkerModule.getConstants(), [
-	'strategy',
-] );
+const defaultsTrigger = pick(LayerMarkerModule.getConstants(), ['strategy']);
 
-const LayerMarker = ( {
+const LayerMarker = ({
 	nativeNodeHandle,
 	reactTreeIndex,
 	children,
@@ -34,143 +39,166 @@ const LayerMarker = ( {
 	onMarkerLongPress,
 	onMarkerTrigger,
 	triggerEvent,
-} : LayerMarkerProps ) => {
-
-    const errorSubscription = useRef<null | EventSubscription>( null );
+}: LayerMarkerProps) => {
+	const errorSubscription = useRef<null | EventSubscription>(null);
 
 	// @ts-ignore
-	const [random, setRandom] = useState<number>( 0 );
-	const [uuid, setUuid] = useState<null | false | string>( null );
-	const [triggerCreateNew, setTriggerCreateNew] = useState<null | number>( null );
+	const [random, setRandom] = useState<number>(0);
+	const [uuid, setUuid] = useState<null | false | string>(null);
+	const [triggerCreateNew, setTriggerCreateNew] = useState<null | number>(
+		null
+	);
 
-    useEffect( () => {
-		errorSubscription.current = LayerMarkerModule.onError( ( error?: EventError ) => {
-			console.log( 'debug error', error ); // debug ???
-		} );
-        return () => {
-            errorSubscription.current?.remove();
-            errorSubscription.current = null;
-        };
-    }, [] );
+	useEffect(() => {
+		errorSubscription.current = LayerMarkerModule.onError(
+			(error?: EventError) => {
+				console.log('debug error', error); // debug ???
+			}
+		);
+		return () => {
+			errorSubscription.current?.remove();
+			errorSubscription.current = null;
+		};
+	}, []);
 
-    useEffect( () => {
+	useEffect(() => {
 		const remove = () => {
-			if ( triggerEvent ) {
+			if (triggerEvent) {
 				triggerEvent.current = null;
 			}
-        };
-		if ( uuid ) {
-			if ( triggerEvent ) {
-				triggerEvent.current = ( params: TriggerParams ) => {
-					LayerMarkerModule.triggerEvent( {
+		};
+		if (uuid) {
+			if (triggerEvent) {
+				triggerEvent.current = (params: TriggerParams) => {
+					LayerMarkerModule.triggerEvent({
 						nativeNodeHandle,
 						markerLayerUuid: uuid,
 						...defaultsTrigger,
 						...params,
-					} )
+					});
 				};
 			}
 		} else {
 			remove();
 		}
-        return remove;
-    }, [uuid,triggerEvent] );
+		return remove;
+	}, [uuid, triggerEvent]);
 
-	useMarkerEventSubscription( {
+	useMarkerEventSubscription({
 		onEvent: onMarkerEvent,
 		onPress: onMarkerPress,
 		onLongPress: onMarkerLongPress,
 		onTrigger: onMarkerTrigger,
-	} );
+	});
 
 	const createLayer = () => {
-		setUuid( false );
-        if ( nativeNodeHandle && undefined !== reactTreeIndex ) {
-			LayerMarkerModule.createLayer( {
+		setUuid(false);
+		if (nativeNodeHandle && undefined !== reactTreeIndex) {
+			LayerMarkerModule.createLayer({
 				nativeNodeHandle,
 				reactTreeIndex,
-                ...( symbol && { symbol } ),
-			} ).then( ( uuid: string ) => {
-				setUuid( uuid );
-				setRandom( Math.random() );
-				( null === triggerCreateNew
-					? ( onCreate ? onCreate( { nativeNodeHandle, uuid } ) : null )
-					: ( onChange ? onChange( { nativeNodeHandle, uuid } ) : null )
-				);
-			} ).catch( ( err: any ) => { console.log( 'ERROR', err ); onError ? onError( err ) : null } );
-		};
+				...(symbol && { symbol }),
+			})
+				.then((uuid: string) => {
+					setUuid(uuid);
+					setRandom(Math.random());
+					null === triggerCreateNew
+						? onCreate
+							? onCreate({ nativeNodeHandle, uuid })
+							: null
+						: onChange
+							? onChange({ nativeNodeHandle, uuid })
+							: null;
+				})
+				.catch((err: any) => {
+					console.log('ERROR', err);
+					onError ? onError(err) : null;
+				});
+		}
 	};
 
-	useEffect( () => {
-		if ( uuid === null && nativeNodeHandle ) {
+	useEffect(() => {
+		if (uuid === null && nativeNodeHandle) {
 			createLayer();
 		}
 		return () => {
-			if ( uuid && nativeNodeHandle ) {
-				LayerMarkerModule.removeLayer( {
+			if (uuid && nativeNodeHandle) {
+				LayerMarkerModule.removeLayer({
 					nativeNodeHandle,
-					uuid
-				} ).then( ( uuid : string ) => {
-					onRemove ? onRemove( { nativeNodeHandle, uuid } ) : null;
-				} ).catch( ( err: ErrorBase ) => { console.log( 'ERROR', err.userInfo.errorMsg ); onError ? onError( err ) : null } );
+					uuid,
+				})
+					.then((uuid: string) => {
+						onRemove ? onRemove({ nativeNodeHandle, uuid }) : null;
+					})
+					.catch((err: ErrorBase) => {
+						console.log('ERROR', err.userInfo.errorMsg);
+						onError ? onError(err) : null;
+					});
 			}
 		};
 	}, [
 		nativeNodeHandle,
-		!! uuid,
+		!!uuid,
 		triggerCreateNew,
-	] );
+	]);
 
-	useEffect( () => {
-		if ( nativeNodeHandle ) {
-			if ( uuid ) {
-				LayerMarkerModule.removeLayer( {
+	useEffect(() => {
+		if (nativeNodeHandle) {
+			if (uuid) {
+				LayerMarkerModule.removeLayer({
 					nativeNodeHandle,
-					uuid
-				} ).then( () => {
-					setUuid( null );
-					setTriggerCreateNew( Math.random() );
-				} ).catch( ( err: any ) => { console.log( 'ERROR', err ); onError ? onError( err ) : null } );
-			} else if ( uuid === null ) {
-				setTriggerCreateNew( Math.random() );
+					uuid,
+				})
+					.then(() => {
+						setUuid(null);
+						setTriggerCreateNew(Math.random());
+					})
+					.catch((err: any) => {
+						console.log('ERROR', err);
+						onError ? onError(err) : null;
+					});
+			} else if (uuid === null) {
+				setTriggerCreateNew(Math.random());
 			}
 		}
-	}, [
-		symbol ? Object.values( symbol ).join( '' ) : null,
-	] );
+	}, [symbol ? Object.values(symbol).join('') : null]);
 
-    if ( ! uuid ) {
-        return null;
-    }
+	if (!uuid) {
+		return null;
+	}
 
-	const wrapChildren = ( children: React.ReactNode ): null | React.ReactNode => ! children ? null : Children.map( children, child => {
-		let newChild = child;
-		if ( ! isValidElement<{ children?: React.ReactNode }>( child )) {
-			return newChild
-		}
-		newChild = cloneElement(
-			child,
-			{
-				...( { markerLayerUuid: uuid } ),
-				...( child?.props?.children && { children: wrapChildren( child.props.children ) } ),
-			},
-		);
-		return newChild;
-	} );
+	const wrapChildren = (children: React.ReactNode): null | React.ReactNode =>
+		!children
+			? null
+			: Children.map(children, (child) => {
+					let newChild = child;
+					if (
+						!isValidElement<{ children?: React.ReactNode }>(child)
+					) {
+						return newChild;
+					}
+					newChild = cloneElement(child, {
+						...{ markerLayerUuid: uuid },
+						...(child?.props?.children && {
+							children: wrapChildren(child.props.children),
+						}),
+					});
+					return newChild;
+				});
 
-	const wrappedChildren = wrapChildren( children );
+	const wrappedChildren = wrapChildren(children);
 
-    return wrappedChildren;
+	return wrappedChildren;
 };
 
 LayerMarker.isMapLayer = true;
 
-LayerMarker.defaults = omit( LayerMarkerModule.getConstants(), [
+LayerMarker.defaults = omit(LayerMarkerModule.getConstants(), [
 	'title',
 	'description',
 	'position',
 	'strategy',
-] );
+]);
 
 LayerMarker.defaultsTrigger = defaultsTrigger;
 

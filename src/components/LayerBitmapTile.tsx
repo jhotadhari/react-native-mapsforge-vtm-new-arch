@@ -11,111 +11,139 @@ import LayerBitmapTileModule, {
 } from '../NativeModules/NativeLayerBitmapTile';
 import type { ErrorBase } from '../types';
 
-const LayerBitmapTile = ( {
+const LayerBitmapTile = ({
 	nativeNodeHandle,
 	reactTreeIndex,
-    url,
-    alpha,
-    zoomMin,
-    zoomMax,
-    enabledZoomMin,
-    enabledZoomMax,
-    cacheSize,
+	url,
+	alpha,
+	zoomMin,
+	zoomMax,
+	enabledZoomMin,
+	enabledZoomMax,
+	cacheSize,
 	cacheDirBase,
 	cacheDirChild,
 	onCreate,
 	onRemove,
 	onChange,
 	onError,
-} : LayerBitmapTileProps ) => {
-
+}: LayerBitmapTileProps) => {
 	// @ts-ignore
-	const [random, setRandom] = useState<number>( 0 );
-	const [uuid, setUuid] = useState<null | false | string>( null );
-	const [triggerCreateNew, setTriggerCreateNew] = useState<null | number>( null );
+	const [random, setRandom] = useState<number>(0);
+	const [uuid, setUuid] = useState<null | false | string>(null);
+	const [triggerCreateNew, setTriggerCreateNew] = useState<null | number>(
+		null
+	);
 
 	const createLayer = () => {
-		setUuid( false );
-        if ( nativeNodeHandle && undefined !== reactTreeIndex ) {
-            LayerBitmapTileModule.createLayer( {
-                nativeNodeHandle,
-                reactTreeIndex,
-                ...( url && { url } ),
-                ...( alpha && { alpha } ),	// java side will ensure it is between 0 and 1.
-                ...( zoomMin && { zoomMin: Math.round( zoomMin ) } ),
-                ...( zoomMax && { zoomMax: Math.round( zoomMax ) } ),
-                ...( enabledZoomMin && { enabledZoomMin: Math.round( enabledZoomMin ) } ),
-                ...( enabledZoomMax && { enabledZoomMax: Math.round( enabledZoomMax ) } ),
-                ...( cacheSize && { cacheSize: Math.round( cacheSize ) } ),
-                ...( cacheDirBase && { cacheDirBase: cacheDirBase.trim() } ),
-                ...( cacheDirChild && { cacheDirChild: cacheDirChild.trim() } ),
-            } ).then( ( uuid: string ) => {
-                setUuid( uuid );
-                setRandom( Math.random() );
-                ( null === triggerCreateNew
-                	? onCreate ? onCreate( { nativeNodeHandle, uuid } ) : null
-                	: onChange ? onChange( { nativeNodeHandle, uuid } ) : null
-                );
-            } ).catch( ( err: ErrorBase ) => { console.log( 'ERROR', err.userInfo.errorMsg ); onError ? onError( err ) : null } );
-        }
+		setUuid(false);
+		if (nativeNodeHandle && undefined !== reactTreeIndex) {
+			LayerBitmapTileModule.createLayer({
+				nativeNodeHandle,
+				reactTreeIndex,
+				...(url && { url }),
+				...(alpha && { alpha }), // java side will ensure it is between 0 and 1.
+				...(zoomMin && { zoomMin: Math.round(zoomMin) }),
+				...(zoomMax && { zoomMax: Math.round(zoomMax) }),
+				...(enabledZoomMin && {
+					enabledZoomMin: Math.round(enabledZoomMin),
+				}),
+				...(enabledZoomMax && {
+					enabledZoomMax: Math.round(enabledZoomMax),
+				}),
+				...(cacheSize && { cacheSize: Math.round(cacheSize) }),
+				...(cacheDirBase && { cacheDirBase: cacheDirBase.trim() }),
+				...(cacheDirChild && { cacheDirChild: cacheDirChild.trim() }),
+			})
+				.then((uuid: string) => {
+					setUuid(uuid);
+					setRandom(Math.random());
+					null === triggerCreateNew
+						? onCreate
+							? onCreate({ nativeNodeHandle, uuid })
+							: null
+						: onChange
+							? onChange({ nativeNodeHandle, uuid })
+							: null;
+				})
+				.catch((err: ErrorBase) => {
+					console.log('ERROR', err.userInfo.errorMsg);
+					onError ? onError(err) : null;
+				});
+		}
 	};
 
-	useEffect( () => {
-		if ( uuid === null && nativeNodeHandle ) {
+	useEffect(() => {
+		if (uuid === null && nativeNodeHandle) {
 			createLayer();
 		}
 		return () => {
-			if ( uuid && nativeNodeHandle ) {
-				LayerBitmapTileModule.removeLayer( {
+			if (uuid && nativeNodeHandle) {
+				LayerBitmapTileModule.removeLayer({
 					nativeNodeHandle,
-					uuid
-				} ).then( ( uuid: string ) => {
-					onRemove ? onRemove( { nativeNodeHandle, uuid } ) : null;
-				} ).catch( ( err: ErrorBase ) => { console.log( 'ERROR', err.userInfo.errorMsg ); onError ? onError( err ) : null } );
+					uuid,
+				})
+					.then((uuid: string) => {
+						onRemove ? onRemove({ nativeNodeHandle, uuid }) : null;
+					})
+					.catch((err: ErrorBase) => {
+						console.log('ERROR', err.userInfo.errorMsg);
+						onError ? onError(err) : null;
+					});
 			}
 		};
 	}, [
 		nativeNodeHandle,
-		!! uuid,
+		!!uuid,
 		triggerCreateNew,
-	] );
+	]);
 
 	// enabledZoomMin enabledZoomMax changed.
-	useEffect( () => {
-		if ( nativeNodeHandle && uuid ) {
-			LayerBitmapTileModule.updateEnabledZoomMinMax( {
+	useEffect(() => {
+		if (nativeNodeHandle && uuid) {
+			LayerBitmapTileModule.updateEnabledZoomMinMax({
 				nativeNodeHandle,
 				uuid,
-                ...( enabledZoomMin && { enabledZoomMin: Math.round( enabledZoomMin ) } ),
-                ...( enabledZoomMax && { enabledZoomMax: Math.round( enabledZoomMax ) } ),
-			} )
-			.catch( ( err: ErrorBase ) => { console.log( 'ERROR', err.userInfo.errorMsg ); onError ? onError( err ) : null } );
+				...(enabledZoomMin && {
+					enabledZoomMin: Math.round(enabledZoomMin),
+				}),
+				...(enabledZoomMax && {
+					enabledZoomMax: Math.round(enabledZoomMax),
+				}),
+			}).catch((err: ErrorBase) => {
+				console.log('ERROR', err.userInfo.errorMsg);
+				onError ? onError(err) : null;
+			});
 		}
-	}, [
-		enabledZoomMin,
-		enabledZoomMax,
-	] );
+	}, [enabledZoomMin, enabledZoomMax]);
 
-	useEffect( () => {
-		if ( nativeNodeHandle && uuid ) {
-			LayerBitmapTileModule.setAlpha( {
+	useEffect(() => {
+		if (nativeNodeHandle && uuid) {
+			LayerBitmapTileModule.setAlpha({
 				nativeNodeHandle,
 				uuid,
-                ...( alpha && { alpha } ),	// java side will ensure it is between 0 and 1.
-			} )
-			.catch( ( err: ErrorBase ) => { console.log( 'ERROR', err.userInfo.errorMsg ); onError ? onError( err ) : null } );
+				...(alpha && { alpha }), // java side will ensure it is between 0 and 1.
+			}).catch((err: ErrorBase) => {
+				console.log('ERROR', err.userInfo.errorMsg);
+				onError ? onError(err) : null;
+			});
 		}
-	}, [alpha] );
+	}, [alpha]);
 
-	useEffect( () => {
-		if ( nativeNodeHandle && uuid ) {
-			LayerBitmapTileModule.removeLayer( {
+	useEffect(() => {
+		if (nativeNodeHandle && uuid) {
+			LayerBitmapTileModule.removeLayer({
 				nativeNodeHandle,
-				uuid
-			} ).then( () => {
-				setUuid( null );
-				setTriggerCreateNew( Math.random() );
-			} ).catch( ( err: ErrorBase ) => { console.log( 'ERROR', err.userInfo.errorMsg ); onError ? onError( err ) : null } );
+				uuid,
+			})
+				.then(() => {
+					setUuid(null);
+					setTriggerCreateNew(Math.random());
+				})
+				.catch((err: ErrorBase) => {
+					console.log('ERROR', err.userInfo.errorMsg);
+					onError ? onError(err) : null;
+				});
 		}
 	}, [
 		url,
@@ -124,7 +152,7 @@ const LayerBitmapTile = ( {
 		cacheSize,
 		cacheDirBase,
 		cacheDirChild,
-	] );
+	]);
 
 	return null;
 };

@@ -25,14 +25,11 @@ import * as LayerPathTypes from './NativeModules/NativeLayerPath';
 export {
 	MapContainer,
 	MapContainerTypes,
-
 	LayerMarker,
 	Marker,
 	MarkerTypes,
-
 	LayerBitmapTile,
 	LayerBitmapTileTypes,
-
 	LayerPath,
 	LayerPathTypes,
 
@@ -41,11 +38,9 @@ export {
 	// LayerMBTilesBitmap,
 	// LayerScalebar,
 
-
 	// LayerPathSlopeGradient,
 
 	// useRenderStyleOptions,
-
 };
 
 export type * from './types';

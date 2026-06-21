@@ -8,18 +8,18 @@ import type { Int32 } from 'react-native/Libraries/Types/CodegenTypes';
 export type { Position } from 'geojson';
 
 export interface ResponseBase {
-  uuid: string;
-  nativeNodeHandle: Int32;
+	uuid: string;
+	nativeNodeHandle: Int32;
 }
 
 export interface ErrorBase {
-  nativeStackAndroid?: any[];
-  userInfo: {
-    errorMsg: string;
-  };
-  code?: string;
+	nativeStackAndroid?: any[];
+	userInfo: {
+		errorMsg: string;
+	};
+	code?: string;
 }
 
 export interface EventError {
-  errorMsg: string;
+	errorMsg: string;
 }
