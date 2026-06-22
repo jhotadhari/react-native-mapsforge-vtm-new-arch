@@ -2,16 +2,25 @@ package com.jhotadhari.reactnative.mapsforge.vtm.modules;
 
 import androidx.annotation.NonNull;
 
+import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.bridge.ReadableArray;
+import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableNativeArray;
 import com.facebook.react.bridge.WritableNativeMap;
 import com.facebook.react.module.annotations.ReactModule;
+import com.jhotadhari.reactnative.mapsforge.vtm.LayerOrderRegistry;
 import com.jhotadhari.reactnative.mapsforge.vtm.NativeMapContainerSpec;
 import com.jhotadhari.reactnative.mapsforge.vtm.Utils;
 
+import org.oscim.android.MapView;
+import org.oscim.layers.Layer;
+
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @ReactModule( name = MapContainer.NAME )
@@ -72,6 +81,48 @@ public class MapContainer extends NativeMapContainerSpec {
 		emitsHardwareKeyUp.pushString( "KEYCODE_VOLUME_DOWN" );
 		constants.put( "emitsHardwareKeyUp", emitsHardwareKeyUp );
 		return constants;
+	}
+
+	@Override
+	public void reorderLayers( ReadableMap params, Promise promise ) {
+		try {
+			if ( ! Utils.rMapHasKey( params, "nativeNodeHandle" ) || ! Utils.rMapHasKey( params, "layerUuids" ) ) {
+				Utils.promiseReject( promise, "Undefined nativeNodeHandle or layerUuids" ); return;
+			}
+
+			int nativeNodeHandle = params.getInt( "nativeNodeHandle" );
+			MapView mapView = Utils.getMapView( getReactApplicationContext(), nativeNodeHandle );
+			if ( null == mapView ) {
+				Utils.promiseReject( promise, "Unable to find mapView" ); return;
+			}
+
+			// Resolve uuids to live Layer instances that are still actually attached to the
+			// map. Any tracked layer that isn't mentioned (e.g. still mid-creation on the JS
+			// side) is left untouched wherever it currently sits, rather than wiping the whole
+			// list, so a reorder triggered by one layer can never orphan another.
+			ReadableArray layerUuids = params.getArray( "layerUuids" );
+			List<Layer> orderedLayers = new ArrayList<>();
+			for ( int i = 0; i < layerUuids.size(); i++ ) {
+				Layer layer = LayerOrderRegistry.get( nativeNodeHandle, layerUuids.getString( i ) );
+				if ( null != layer && mapView.map().layers().contains( layer ) ) {
+					orderedLayers.add( layer );
+				}
+			}
+
+			for ( Layer layer : orderedLayers ) {
+				mapView.map().layers().remove( layer );
+			}
+			for ( Layer layer : orderedLayers ) {
+				mapView.map().layers().add( layer );
+			}
+
+			mapView.map().updateMap();
+
+			promise.resolve( null );
+		} catch ( Exception e ) {
+			e.printStackTrace();
+			Utils.promiseReject( promise, e.getMessage() );
+		}
 	}
 
 }

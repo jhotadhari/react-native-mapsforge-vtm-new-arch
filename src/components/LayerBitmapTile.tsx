@@ -10,10 +10,9 @@ import LayerBitmapTileModule, {
 	type LayerBitmapTileProps,
 } from '../NativeModules/NativeLayerBitmapTile';
 import type { ErrorBase } from '../types';
+import useLayerOrder from '../compose/useLayerOrder';
 
 const LayerBitmapTile = ({
-	nativeNodeHandle,
-	reactTreeIndex,
 	url,
 	alpha,
 	zoomMin,
@@ -29,6 +28,8 @@ const LayerBitmapTile = ({
 	onError,
 }: LayerBitmapTileProps) => {
 	const [uuid, setUuid] = useState<null | false | string>(null);
+
+	const nativeNodeHandle = useLayerOrder(uuid);
 
 	const createLayerRef = useRef<
 		| undefined
@@ -47,10 +48,9 @@ const LayerBitmapTile = ({
 			triggerOnChange?: boolean;
 		}) => {
 			setUuid(false);
-			if (nativeNodeHandle && undefined !== reactTreeIndex) {
+			if (nativeNodeHandle) {
 				LayerBitmapTileModule.createLayer({
 					nativeNodeHandle,
-					reactTreeIndex,
 					...(url && { url }),
 					...(alpha && { alpha }), // java side will ensure it is between 0 and 1.
 					...(zoomMin && { zoomMin: Math.round(zoomMin) }),
@@ -84,7 +84,6 @@ const LayerBitmapTile = ({
 		};
 	}, [
 		nativeNodeHandle,
-		reactTreeIndex,
 		url,
 		alpha,
 		zoomMin,

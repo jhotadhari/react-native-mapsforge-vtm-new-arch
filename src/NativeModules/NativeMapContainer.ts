@@ -52,8 +52,14 @@ export interface ModuleParams {
 	emitsHardwareKeyUp: ReadonlyArray<string>;
 }
 
+export interface ReorderLayersParams {
+	nativeNodeHandle: Int32;
+	layerUuids: ReadonlyArray<string>;
+}
+
 export interface Spec extends TurboModule {
 	getConstants(): ModuleParams;
+	reorderLayers(params: ReorderLayersParams): Promise<void>;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>('MapContainer');

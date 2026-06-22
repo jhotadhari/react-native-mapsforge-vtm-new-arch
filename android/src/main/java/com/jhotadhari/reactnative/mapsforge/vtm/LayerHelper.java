@@ -31,18 +31,18 @@ public class LayerHelper {
 
 	public String addLayer( Layer layer, ReadableMap params, String uuid ) {
 		if ( ! Utils.rMapHasKey( params, "nativeNodeHandle" ) ) { return null; }
-		MapView mapView = Utils.getMapView( reactContext, params.getInt( "nativeNodeHandle" ) );
+		int nativeNodeHandle = params.getInt( "nativeNodeHandle" );
+		MapView mapView = Utils.getMapView( reactContext, nativeNodeHandle );
 		if ( null == mapView ) { return null; }
 
-		// Add layer to map.
-		mapView.map().layers().add(
-			Math.min( mapView.map().layers().size(), (int) params.getInt( "reactTreeIndex" ) ),
-			layer
-		);
+		// Append layer to map. Final position among JS-managed layers is established
+		// separately and continuously by MapContainer.reorderLayers, not at creation time.
+		mapView.map().layers().add( layer );
 
 		// Trigger update map.
 		mapView.map().updateMap();
 		layers.put( uuid, layer );
+		LayerOrderRegistry.put( nativeNodeHandle, uuid, layer );
 
 		return uuid;
 	}
@@ -75,6 +75,7 @@ public class LayerHelper {
 
 			// Remove layer from layers.
 			layers.remove( uuid );
+			LayerOrderRegistry.remove( nativeNodeHandle, uuid );
 
 			// Trigger map update.
 			mapView.map().updateMap();

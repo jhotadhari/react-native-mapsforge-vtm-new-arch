@@ -64,7 +64,6 @@ interface ModuleParams {
 
 interface CreateLayerParams extends ModuleParams {
 	nativeNodeHandle?: Int32;
-	reactTreeIndex?: Int32;
 	coordinates?: ReadonlyArray<Position>; // geojson LineString-style `coordinates`
 	supportsGestures?: boolean;
 }
@@ -170,8 +169,6 @@ export interface LayerPathGestureResponse extends ResponseBase {
 }
 
 export type LayerPathProps = {
-	nativeNodeHandle?: null | number;
-	reactTreeIndex?: number;
 	filePath?: null | `/${string}` | `content://${string}`;
 	coordinates?: GeoJsonPosition[]; // e.g. a geojson LineString's `coordinates`
 	responseInclude?: ResponseInclude;

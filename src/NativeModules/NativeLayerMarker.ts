@@ -100,7 +100,6 @@ export interface MarkerEvent extends ResponseBase {
 
 interface CreateLayerParams extends ModuleLayerParams {
 	nativeNodeHandle?: Int32;
-	reactTreeIndex?: Int32;
 }
 
 interface RemoveLayerParams {
@@ -169,8 +168,6 @@ export interface SymbolParams {
 }
 
 export type LayerMarkerProps = {
-	nativeNodeHandle?: CreateLayerParams['nativeNodeHandle'];
-	reactTreeIndex?: CreateLayerParams['reactTreeIndex'];
 	children?: React.ReactNode;
 	symbol?: SymbolParams;
 	onCreate?: null | ((response: ResponseBase) => void);
@@ -185,8 +182,6 @@ export type LayerMarkerProps = {
 };
 
 export type MarkerProps = {
-	nativeNodeHandle?: CreateMarkerParams['nativeNodeHandle'];
-	markerLayerUuid?: CreateMarkerParams['markerLayerUuid'];
 	position: CreateMarkerParams['position'];
 	title?: CreateMarkerParams['title'];
 	description?: CreateMarkerParams['description'];

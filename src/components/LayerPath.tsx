@@ -13,15 +13,14 @@ import LayerPathModule, {
 } from '../NativeModules/NativeLayerPath';
 import type { ErrorBase } from '../types';
 import useLayerPathEventSubscription from '../compose/useLayerPathEventSubscription';
+import useLayerOrder from '../compose/useLayerOrder';
 
 const moduleDefaults = LayerPathModule.getConstants();
 
 const LayerPath = ({
-	nativeNodeHandle,
 	coordinates,
 	responseInclude: responseIncludeParams,
 	gestureScreenDistance,
-	reactTreeIndex,
 	style,
 	simplificationTolerance,
 
@@ -37,6 +36,8 @@ const LayerPath = ({
 	triggerEvent,
 }: LayerPathProps) => {
 	const [uuid, setUuid] = useState<null | false | string>(null);
+
+	const nativeNodeHandle = useLayerOrder(uuid);
 
 	const responseInclude = useMemo(
 		() => ({
@@ -66,15 +67,9 @@ const LayerPath = ({
 			triggerOnChange?: boolean;
 		}) => {
 			setUuid(false);
-			if (
-				nativeNodeHandle &&
-				undefined !== reactTreeIndex &&
-				coordinates &&
-				coordinates.length > 0
-			) {
+			if (nativeNodeHandle && coordinates && coordinates.length > 0) {
 				LayerPathModule.createLayer({
 					nativeNodeHandle,
-					reactTreeIndex,
 					supportsGestures,
 					...(coordinates && { coordinates }),
 					...(style && { style }),
@@ -95,7 +90,6 @@ const LayerPath = ({
 		};
 	}, [
 		nativeNodeHandle,
-		reactTreeIndex,
 		coordinates,
 		style,
 		responseInclude,

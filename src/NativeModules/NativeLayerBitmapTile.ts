@@ -17,7 +17,6 @@ interface ModuleParams {
 
 interface CreateLayerParams extends ModuleParams {
 	nativeNodeHandle?: Int32;
-	reactTreeIndex?: Int32;
 }
 
 interface RemoveLayerParams {
@@ -39,8 +38,6 @@ interface SetAlphaParams {
 }
 
 export type LayerBitmapTileProps = {
-	nativeNodeHandle?: CreateLayerParams['nativeNodeHandle'];
-	reactTreeIndex?: CreateLayerParams['reactTreeIndex'];
 	url?: string;
 	alpha?: CreateLayerParams['alpha'];
 	zoomMin?: CreateLayerParams['zoomMin'];

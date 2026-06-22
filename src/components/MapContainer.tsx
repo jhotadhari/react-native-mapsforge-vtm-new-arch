@@ -1,19 +1,9 @@
 /**
  * External dependencies
  */
-import {
-	cloneElement,
-	useEffect,
-	useRef,
-	useState,
-	Children,
-	isValidElement,
-	useMemo,
-	type ReactNode,
-	useCallback,
-} from 'react';
+import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { findNodeHandle, useWindowDimensions, View } from 'react-native';
-import { get, isBoolean } from 'lodash-es';
+import { isBoolean } from 'lodash-es';
 
 /**
  * Internal dependencies
@@ -22,6 +12,11 @@ import NativeMapContainer from '../NativeModules/NativeMapContainer';
 import MapsforgeVtmView, {
 	type MapContainerProps,
 } from '../NativeViews/MapsforgeVtmViewNativeComponent';
+import MapHandleContext, {
+	createLayerOrderRegistry,
+	type LayerOrderRegistry,
+	type MapHandleContextValue,
+} from '../context/MapHandleContext';
 
 const moduleDefaults = NativeMapContainer.getConstants();
 
@@ -88,47 +83,24 @@ const MapContainer = ({
 		}
 	}, [ref?.current]);
 
-	const wrappedChildren = useMemo(() => {
-		let lastIndex = 0; // It starts with the MapFragment event layer. Otherwise it would be -1 here.
-		const wrapChildren = (children: ReactNode): null | ReactNode =>
-			!children || !findNodeHandle(ref?.current)
-				? null
-				: Children.map(children, (child) => {
-						let newChild = child;
+	const registryRef = useRef<undefined | LayerOrderRegistry>(undefined);
+	if (!registryRef.current) {
+		registryRef.current = createLayerOrderRegistry();
+	}
+	const registry = registryRef.current;
+	// Reset on every render (not just mount): this is what gives useLayerOrder a fresh,
+	// reliable anchor at the start of each coherent render pass over `children`, so a layer
+	// that mounts/remounts there (e.g. a toggled-on <LayerPath/>) can insert itself in the
+	// right relative position instead of always landing at the end.
+	registry.cursor = undefined;
 
-						if (!isValidElement<{ children?: ReactNode }>(child)) {
-							return newChild;
-						}
-
-						const type = get(child, 'type');
-						if (!type || !type.valueOf) {
-							return newChild;
-						}
-						const isMapLayer = get(type.valueOf(), 'isMapLayer');
-
-						lastIndex = isMapLayer ? lastIndex + 1 : lastIndex;
-						newChild =
-							child && type
-								? cloneElement(child, {
-										...{ nativeNodeHandle },
-										...(isMapLayer
-											? { reactTreeIndex: lastIndex }
-											: {}),
-										...(child?.props?.children && {
-											children: wrapChildren(
-												child.props.children
-											),
-										}),
-									})
-								: child;
-
-						return newChild;
-					});
-		return wrapChildren(children);
-	}, [
-		children,
-		nativeNodeHandle,
-	]);
+	const mapHandleContextValue = useMemo<MapHandleContextValue>(
+		() => ({
+			nativeNodeHandle,
+			registry,
+		}),
+		[nativeNodeHandle, registry]
+	);
 
 	const handleMapCreated = useCallback(() => {
 		setMapCreated(true);
@@ -184,7 +156,11 @@ const MapContainer = ({
 				onResume={onResume ? onResume : null}
 				onError={onError ? onError : null}
 			/>
-			{mapCreated && wrappedChildren}
+			{mapCreated && (
+				<MapHandleContext.Provider value={mapHandleContextValue}>
+					{children}
+				</MapHandleContext.Provider>
+			)}
 		</View>
 	);
 };

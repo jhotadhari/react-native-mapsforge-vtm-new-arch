@@ -1,16 +1,7 @@
 /**
  * External dependencies
  */
-import {
-	Children,
-	cloneElement,
-	isValidElement,
-	useEffect,
-	useMemo,
-	useRef,
-	useState,
-	type ReactNode,
-} from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { EventSubscription } from 'react-native';
 import { omit, pick } from 'lodash-es';
 
@@ -24,12 +15,12 @@ import LayerMarkerModule, {
 
 import type { ErrorBase, EventError } from '../types';
 import useMarkerEventSubscription from '../compose/useMarkerEventSubscription';
+import useLayerOrder from '../compose/useLayerOrder';
+import MarkerLayerContext from '../context/MarkerLayerContext';
 
 const defaultsTrigger = pick(LayerMarkerModule.getConstants(), ['strategy']);
 
 const LayerMarker = ({
-	nativeNodeHandle,
-	reactTreeIndex,
 	children,
 	symbol,
 	onCreate,
@@ -45,6 +36,8 @@ const LayerMarker = ({
 	const errorSubscription = useRef<null | EventSubscription>(null);
 
 	const [uuid, setUuid] = useState<null | false | string>(null);
+
+	const nativeNodeHandle = useLayerOrder(uuid);
 
 	useEffect(() => {
 		errorSubscription.current = LayerMarkerModule.onError(
@@ -68,7 +61,7 @@ const LayerMarker = ({
 			if (triggerEvent) {
 				triggerEvent.current = (params: TriggerParams) => {
 					LayerMarkerModule.triggerEvent({
-						nativeNodeHandle,
+						...(nativeNodeHandle && { nativeNodeHandle }),
 						markerLayerUuid: uuid,
 						...defaultsTrigger,
 						...params,
@@ -105,10 +98,9 @@ const LayerMarker = ({
 			triggerOnChange?: boolean;
 		}) => {
 			setUuid(false);
-			if (nativeNodeHandle && undefined !== reactTreeIndex) {
+			if (nativeNodeHandle) {
 				LayerMarkerModule.createLayer({
 					nativeNodeHandle,
-					reactTreeIndex,
 					...(symbol && { symbol }),
 				})
 					.then((uuid: string) => {
@@ -128,7 +120,6 @@ const LayerMarker = ({
 		};
 	}, [
 		nativeNodeHandle,
-		reactTreeIndex,
 		symbol,
 		onCreate,
 		onChange,
@@ -220,31 +211,15 @@ const LayerMarker = ({
 		onError,
 	]);
 
-	const wrappedChildren = useMemo(() => {
-		const wrapChildren = (children: ReactNode): null | ReactNode =>
-			!children
-				? null
-				: Children.map(children, (child) => {
-						let newChild = child;
-						if (!isValidElement<{ children?: ReactNode }>(child)) {
-							return newChild;
-						}
-						newChild = cloneElement(child, {
-							...{ markerLayerUuid: uuid },
-							...(child?.props?.children && {
-								children: wrapChildren(child.props.children),
-							}),
-						});
-						return newChild;
-					});
-		return wrapChildren(children);
-	}, [children, uuid]);
-
 	if (!uuid) {
 		return null;
 	}
 
-	return wrappedChildren;
+	return (
+		<MarkerLayerContext.Provider value={{ markerLayerUuid: uuid }}>
+			{children}
+		</MarkerLayerContext.Provider>
+	);
 };
 
 LayerMarker.isMapLayer = true;

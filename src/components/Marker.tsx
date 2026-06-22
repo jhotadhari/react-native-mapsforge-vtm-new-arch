@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import { omit } from 'lodash-es';
 
 /**
@@ -17,10 +17,10 @@ import {
 } from '../NativeModules/NativeLayerMarker';
 import type { ErrorBase } from '../types';
 import useMarkerEventSubscription from '../compose/useMarkerEventSubscription';
+import MapHandleContext from '../context/MapHandleContext';
+import MarkerLayerContext from '../context/MarkerLayerContext';
 
 const Marker = ({
-	nativeNodeHandle,
-	markerLayerUuid,
 	title,
 	description,
 	position,
@@ -34,6 +34,9 @@ const Marker = ({
 	onLongPress,
 	onTrigger,
 }: MarkerProps) => {
+	const { nativeNodeHandle } = useContext(MapHandleContext);
+	const { markerLayerUuid } = useContext(MarkerLayerContext);
+
 	const [uuid, setUuid] = useState<null | false | string>(null);
 	const indexRef = useRef<number>(-1);
 
