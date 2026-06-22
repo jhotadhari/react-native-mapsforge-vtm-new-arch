@@ -178,28 +178,25 @@ const LayerPath = ({
 	// 		}
 	// }, [Object.values( style ).join( '' )] );
 
-	// useEffect( () => {
-	// 	removeLayerRef?.current &&
-	// 		removeLayerRef
-	// 			?.current( { triggerOnRemove: false } )
-	// 			.then( ( success ) => {
-	// 				if ( success ) {
-	// 					setUuid( null );
-	// 					createLayerRef?.current &&
-	// 						createLayerRef?.current( {
-	// 							triggerOnCreate: false,
-	// 							triggerOnChange: true,
-	// 						} );
-	// 				}
-	// 			} );
-	// }, [
-	// 	( coordinates.length > 0
-	// 		? [...coordinates].map( pos => pos.join( ',' ) ).join( '' )
-	// 		: null
-	// 	),
-	// 	simplificationTolerance,
-	// 	Object.keys( responseInclude ).map( key => key + responseInclude[key] ).join( '' ),
-	// ] );
+	useEffect(() => {
+		removeLayerRef?.current &&
+			removeLayerRef
+				?.current({ triggerOnRemove: false })
+				.then((success) => {
+					if (success) {
+						setUuid(null);
+						createLayerRef?.current &&
+							createLayerRef?.current({
+								triggerOnCreate: false,
+								triggerOnChange: true,
+							});
+					}
+				});
+	}, [
+		coordinates,
+		simplificationTolerance,
+		responseInclude,
+	]);
 
 	useEffect(() => {
 		const remove = () => {

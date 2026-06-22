@@ -15,7 +15,9 @@
 !src/**/*
 
 # include dir src.
-!/example/src
+!/example/
+example/*
+!/example/src/
 !example/src/**/*
 
 # include dir scripts.

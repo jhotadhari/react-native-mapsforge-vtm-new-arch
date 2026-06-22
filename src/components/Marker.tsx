@@ -161,8 +161,8 @@ const Marker = ({
 					}
 				});
 	}, [
-		position ? position.join(',') : null,
-		symbol ? Object.values(symbol).join('') : null,
+		position,
+		symbol,
 	]);
 
 	useMarkerEventSubscription({
