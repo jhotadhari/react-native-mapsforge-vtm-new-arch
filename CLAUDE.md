@@ -90,28 +90,30 @@ native side and the view's `nativeNodeHandle` (obtained via `findNodeHandle` in 
 can't get a node handle for a Fabric view any other way before it mounts).
 
 **Wiring layers together — Context, not prop-injection:** `MapContainer` provides `MapHandleContext`
-(`{ nativeNodeHandle, registry }`) directly over `{children}` — it does not walk or clone its children. Any
-component flagged with a static `isMapLayer = true` (see `LayerMarker.isMapLayer = true`) reads
-`nativeNodeHandle` via the `useLayerOrder` hook (`src/compose/useLayerOrder.ts`) instead of via a prop, so an
-arbitrary number of intermediate `View`s or custom wrapper components between `MapContainer` and a layer
-doesn't break the wiring. `LayerMarker` follows the same pattern one level down: it provides its own
-`MarkerLayerContext` (`{ markerLayerUuid }`) wrapping its children, and `Marker` reads it via `useContext`
-instead of receiving it as an injected prop, forming a chain: view handle → layer uuid → item uuid.
+(`{ nativeNodeHandle, registry }`) directly over `{children}` — it does not walk or clone its children. A
+layer component (`LayerMarker`/`LayerPath`/`LayerBitmapTile`) gets `nativeNodeHandle` by calling the
+`useLayerOrder` hook (`src/compose/useLayerOrder.ts`) instead of receiving it as a prop, so an arbitrary
+number of intermediate `View`s or custom wrapper components between `MapContainer` and a layer doesn't break
+the wiring. `LayerMarker` follows the same pattern one level down: it provides its own `MarkerLayerContext`
+(`{ markerLayerUuid }`) wrapping its children, and `Marker` reads it via `useContext` instead of receiving it
+as an injected prop, forming a chain: view handle → layer uuid → item uuid. (There used to be a static
+`isMapLayer = true` flag on each layer component, checked by the old prop-injection walk to decide what to
+clone — it's gone now along with that walk; calling `useLayerOrder` is what makes something a "layer" today,
+not a flag.)
 
 **Continuous layer ordering, not one-shot creation index:** `createLayer` always appends on the native side;
 a layer's position in `mapView.map().layers()` is established and kept in sync separately and continuously
 by `useLayerOrder` and a shared `LayerOrderRegistry` (created once per `MapContainer`, handed down through
-`MapHandleContext`). Each `isMapLayer` component registers into the registry **during render** (not in an
-effect): it anchors itself right after whichever sibling rendered immediately before it in the same pass,
-using a `cursor` that `MapContainer` resets to `undefined` at the start of every one of its own renders.
-This works because React always re-renders non-memoized siblings together whenever a shared ancestor
-re-renders (e.g. a `{show && <LayerPath/>}` toggle), so a layer that mounts/remounts lands in the correct
-relative position instead of always being appended at the end — and an already-registered layer is never
-moved by this, so a later solo re-render (e.g. its own `uuid` resolving asynchronously) can't corrupt the
-order. Whenever the resulting order of resolved uuids actually changes, the registry calls the native
-`reorderLayers` TurboModule method to resync the live native layer list. If you add a new `isMapLayer`
-component, call `useLayerOrder(uuid)` to get `nativeNodeHandle` and register it the same way the existing
-ones do.
+`MapHandleContext`). Each layer component registers into the registry **during render** (not in an effect):
+it anchors itself right after whichever sibling rendered immediately before it in the same pass, using a
+`cursor` that `MapContainer` resets to `undefined` at the start of every one of its own renders. This works
+because React always re-renders non-memoized siblings together whenever a shared ancestor re-renders (e.g. a
+`{show && <LayerPath/>}` toggle), so a layer that mounts/remounts lands in the correct relative position
+instead of always being appended at the end — and an already-registered layer is never moved by this, so a
+later solo re-render (e.g. its own `uuid` resolving asynchronously) can't corrupt the order. Whenever the
+resulting order of resolved uuids actually changes, the registry calls the native `reorderLayers` TurboModule
+method to resync the live native layer list. If you add a new layer component, call `useLayerOrder(uuid)` to
+get `nativeNodeHandle` and register it the same way the existing ones do.
 
 Native module event subscriptions (`onMarkerEvent`, etc.) are global per TurboModule (not scoped to one
 layer instance), so component-level hooks like `useMarkerEventSubscription` filter incoming events by

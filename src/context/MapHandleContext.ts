@@ -11,7 +11,7 @@ import NativeMapContainer from '../NativeModules/NativeMapContainer';
 export type LayerOrderRegistry = {
 	order: symbol[];
 	uuids: Map<symbol, string>;
-	// Id of whichever isMapLayer instance rendered immediately before "now" within the current
+	// Id of whichever layer instance rendered immediately before "now" within the current
 	// render pass. MapContainer resets this to undefined at the start of every one of its own
 	// renders; see useLayerOrder for how it's used to anchor newly mounted layers.
 	cursor: undefined | symbol;
@@ -25,7 +25,7 @@ export type MapHandleContextValue = {
 
 /**
  * Creates the registry MapContainer hands down through context. It tracks, for every mounted
- * isMapLayer component, where it sits in the render tree (`order`, populated in document order
+ * layer component, where it sits in the render tree (`order`, populated in document order
  * regardless of nesting depth) and its resolved native uuid (`uuids`, populated once that
  * component's own createLayer() call resolves). Whenever either changes, `scheduleSync` recomputes
  * the full native layer order and -- only if it actually changed -- pushes it to the native side.

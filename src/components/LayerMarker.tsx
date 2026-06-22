@@ -169,8 +169,6 @@ const LayerMarker = ({
 	);
 };
 
-LayerMarker.isMapLayer = true;
-
 LayerMarker.defaults = omit(LayerMarkerModule.getConstants(), [
 	'title',
 	'description',

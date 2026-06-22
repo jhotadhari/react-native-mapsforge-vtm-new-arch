@@ -186,7 +186,6 @@ const LayerPath = ({
 
 	return null;
 };
-LayerPath.isMapLayer = true;
 
 /// ??? add defaults
 

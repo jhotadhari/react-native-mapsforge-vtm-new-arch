@@ -9,7 +9,7 @@ import { useContext, useEffect, useRef } from 'react';
 import MapHandleContext from '../context/MapHandleContext';
 
 /**
- * Registers an isMapLayer component into the shared, map-wide layer ordering registry, and keeps
+ * Registers a layer component into the shared, map-wide layer ordering registry, and keeps
  * the native layer stack's order in sync with where this component sits in the render tree --
  * across arbitrary nesting depth, and continuously across mount/unmount/reorder, not just at
  * creation time. Returns the current nativeNodeHandle, so callers don't need a separate

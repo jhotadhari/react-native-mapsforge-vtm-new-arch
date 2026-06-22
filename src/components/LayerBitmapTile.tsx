@@ -158,8 +158,6 @@ const LayerBitmapTile = ({
 	return null;
 };
 
-LayerBitmapTile.isMapLayer = true;
-
 LayerBitmapTile.defaults = LayerBitmapTileModule.getConstants();
 
 export default LayerBitmapTile;
