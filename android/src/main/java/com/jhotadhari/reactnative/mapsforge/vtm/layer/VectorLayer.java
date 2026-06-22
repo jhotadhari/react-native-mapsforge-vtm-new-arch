@@ -71,6 +71,15 @@ public class VectorLayer extends org.oscim.layers.vector.VectorLayer {
 		mSupportsGestures = supportsGestures;
 	}
 
+	/**
+	 * Drops all previously drawn geometries (mDrawables, inherited from the jts VectorLayer)
+	 * so callers can redraw new geometry in place, without replacing this Layer instance on
+	 * the map (which would need re-binding gesture/update listeners, see Layers#set).
+	 */
+	public synchronized void clearDrawables() {
+		mDrawables.clear();
+	}
+
 	@Override
 	public boolean onGesture( Gesture g, MotionEvent e ) {
 		if ( mGestureListener == null || ! mSupportsGestures ) {

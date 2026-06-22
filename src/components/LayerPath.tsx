@@ -178,24 +178,35 @@ const LayerPath = ({
 	// 		}
 	// }, [Object.values( style ).join( '' )] );
 
+	// Redraw the existing native layer in place when the line itself changes,
+	// instead of tearing down and recreating the layer.
 	useEffect(() => {
-		removeLayerRef?.current &&
-			removeLayerRef
-				?.current({ triggerOnRemove: false })
-				.then((success) => {
-					if (success) {
-						setUuid(null);
-						createLayerRef?.current &&
-							createLayerRef?.current({
-								triggerOnCreate: false,
-								triggerOnChange: true,
-							});
-					}
+		if (uuid && nativeNodeHandle && coordinates && coordinates.length > 0) {
+			LayerPathModule.updateCoordinates({
+				nativeNodeHandle,
+				uuid,
+				coordinates,
+				...(style && { style }),
+				...(responseInclude && { responseInclude }),
+				...(simplificationTolerance && { simplificationTolerance }),
+			})
+				.then((response: LayerPathResponse) => {
+					onChange ? onChange(response) : null;
+				})
+				.catch((err: ErrorBase) => {
+					console.log('ERROR', err.userInfo.errorMsg);
+					onError ? onError(err) : null;
 				});
+		}
 	}, [
+		uuid,
+		nativeNodeHandle,
 		coordinates,
 		simplificationTolerance,
+		style,
 		responseInclude,
+		onChange,
+		onError,
 	]);
 
 	// Update gesture detection on the existing native layer when the

@@ -286,6 +286,63 @@ public class LayerPath extends NativeLayerPathSpec {
 	}
 
 	@ReactMethod
+	public void updateCoordinates( ReadableMap params, Promise promise ) {
+		WritableMap responseParams = new WritableNativeMap();
+		try {
+			if ( ! Utils.rMapHasKey( params, "nativeNodeHandle" ) ) {
+				Utils.promiseReject( promise,"Undefined nativeNodeHandle" ); return;
+			}
+			if ( ! Utils.rMapHasKey( params, "uuid" ) ) {
+				Utils.promiseReject( promise,"Undefined uuid" ); return;
+			}
+			String uuid = params.getString( "uuid" );
+			responseParams.putString( "uuid", uuid );
+			MapView mapView = Utils.getMapView( getReactApplicationContext(), params.getInt( "nativeNodeHandle" ) );
+			if ( null == mapView ) {
+				Utils.promiseReject( promise,"Unable to find mapView" ); return;
+			}
+			VectorLayer vectorLayer = (VectorLayer) layerHelper.getLayers().get( uuid );
+			if ( null == vectorLayer ) {
+				Utils.promiseReject( promise,"Layer not found" ); return;
+			}
+
+			// Get params, assign defaults.
+			double simplificationTolerance = Utils.rMapHasKey( params, "simplificationTolerance" ) ? params.getDouble( "simplificationTolerance" ) : (double) getConstants().get( "simplificationTolerance" );
+			ReadableArray coordinates = Utils.rMapHasKey( params, "coordinates" ) ? params.getArray( "coordinates" ) : null;
+			ReadableMap responseInclude = Utils.rMapHasKey( params, "responseInclude" ) ? params.getMap( "responseInclude" ) : (ReadableMap) getConstants().get( "responseInclude" );
+			ReadableMap style = Utils.rMapHasKey( params, "style" ) ? params.getMap( "style" ) : (ReadableMap) getConstants().get( "style" );
+
+			// Convert input params to jtsCoordinates
+			Coordinate[] jtsCoordinates = new Coordinate[0];
+			if ( null != coordinates && coordinates.size() > 0 ) {
+				jtsCoordinates = readableArrayToJtsCoordinates( coordinates, (float) simplificationTolerance );
+			}
+			if ( null == jtsCoordinates || jtsCoordinates.length == 0 ) {
+				Utils.promiseReject( promise,"Unable to parse coordinates" ); return;
+			}
+
+			// Store coordinates
+			originalJtsCoordinatesMap.put( uuid, jtsCoordinates );
+
+			// Redraw the line on the existing layer in place, instead of replacing it on the map.
+			vectorLayer.clearDrawables();
+			drawLineForCoordinates(
+				jtsCoordinates,
+				getStyleBuilderFromMap( style ),
+				uuid,
+				vectorLayer
+			);
+			vectorLayer.update();
+
+			addStuffToResponse( uuid, responseInclude, 1, responseParams );
+		} catch( Exception e ) {
+			e.printStackTrace();
+			promise.reject( "Error", e );
+		}
+		promise.resolve( responseParams );
+	}
+
+	@ReactMethod
 	public void updateStyle( ReadableMap params, Promise promise ) {
 		WritableMap responseParams = new WritableNativeMap();
 		try {
