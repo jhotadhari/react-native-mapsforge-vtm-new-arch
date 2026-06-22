@@ -192,23 +192,33 @@ const LayerMarker = ({
 		uuid,
 	]);
 
+	// Update the layer's default marker symbol in place when it changes,
+	// instead of tearing down and recreating the layer (which would also
+	// orphan any markers already created under it).
 	useEffect(() => {
-		removeLayerRef?.current &&
-			removeLayerRef
-				?.current({
-					triggerOnRemove: false,
+		if (uuid && nativeNodeHandle) {
+			LayerMarkerModule.updateLayer({
+				nativeNodeHandle,
+				uuid,
+				...(symbol && { symbol }),
+			})
+				.then((updatedUuid: string) => {
+					onChange
+						? onChange({ nativeNodeHandle, uuid: updatedUuid })
+						: null;
 				})
-				.then((success) => {
-					if (success) {
-						setUuid(null);
-						createLayerRef?.current &&
-							createLayerRef?.current({
-								triggerOnCreate: false,
-								triggerOnChange: true,
-							});
-					}
+				.catch((err: ErrorBase) => {
+					console.log('ERROR', err.userInfo.errorMsg);
+					onError ? onError(err) : null;
 				});
-	}, [symbol]);
+		}
+	}, [
+		uuid,
+		nativeNodeHandle,
+		symbol,
+		onChange,
+		onError,
+	]);
 
 	const wrappedChildren = useMemo(() => {
 		const wrapChildren = (children: ReactNode): null | ReactNode =>

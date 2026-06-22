@@ -290,14 +290,17 @@ public class LayerMarker extends NativeLayerMarkerSpec {
 				Utils.lngFromPosition( position )
 			)
 		);
-		// Maybe get symbol.
-		if ( Utils.rMapHasKey( params, "symbol" ) ) {
-			MarkerSymbol symbol = getMarkerSymbol(
+		// Resolve symbol. Markers without their own explicit symbol get the
+		// layer's current default assigned explicitly (rather than left null
+		// to fall back on the renderer's default), so a later layer-wide
+		// symbol change (see updateLayer) can find and update them in place.
+		MarkerSymbol symbol = Utils.rMapHasKey( params, "symbol" )
+			? getMarkerSymbol(
 				params.getMap( "symbol" ),
 				mapFragment.getActivity().getContentResolver()
-			);
-			markerItem.setMarker( symbol );
-		}
+			)
+			: markerLayer.getDefaultMarker();
+		markerItem.setMarker( symbol );
 		// Add index to response.
 		responseParams.putInt( "index", markerLayer.getItemList().size() );
 		// Add marker to markerLayer.
@@ -342,6 +345,113 @@ public class LayerMarker extends NativeLayerMarkerSpec {
 		mapView.map().updateMap();
 		// Resolve uuid
 		promise.resolve( params.getString( "uuid" ) );
+	}
+
+	@Override
+	public void updateLayer( ReadableMap params, Promise promise ) {
+		try {
+			if ( ! Utils.rMapHasKey( params, "nativeNodeHandle" ) ) {
+				Utils.promiseReject( promise,"Undefined nativeNodeHandle" ); return;
+			}
+			MapView mapView = Utils.getMapView( getReactApplicationContext(), params.getInt( "nativeNodeHandle" ) );
+			MapFragment mapFragment = Utils.getMapFragment( getReactApplicationContext(), params.getInt( "nativeNodeHandle" ) );
+			if ( null == mapView || null == mapFragment ) {
+				Utils.promiseReject( promise,"Unable to find mapView or mapFragment" ); return;
+			}
+			if ( ! Utils.rMapHasKey( params, "uuid" ) ) {
+				Utils.promiseReject( promise,"Undefined uuid" ); return;
+			}
+			String uuid = params.getString( "uuid" );
+			ItemizedLayer markerLayer = (ItemizedLayer) layerHelper.getLayers().get( uuid );
+			if ( markerLayer == null ) {
+				Utils.promiseReject( promise,"Unable to find markerLayer" ); return;
+			}
+
+			// Get params, assign defaults.
+			ReadableMap symbolMap = Utils.rMapHasKey( params, "symbol" ) ? params.getMap( "symbol" ) : (ReadableMap) getConstants().get( "symbol" );
+
+			// Resolve the new default symbol and push it onto every existing
+			// marker that's still using the old default (matched by object
+			// identity, see createMarker), without touching markers that have
+			// their own explicit symbol. No need to recreate the layer itself.
+			MarkerSymbol oldDefault = markerLayer.getDefaultMarker();
+			MarkerSymbol newDefault = getMarkerSymbol(
+				symbolMap,
+				mapFragment.getActivity().getContentResolver()
+			);
+			markerLayer.setDefaultMarker( newDefault );
+			for ( MarkerInterface item : markerLayer.getItemList() ) {
+				MarkerItem markerItem = (MarkerItem) item;
+				if ( markerItem.getMarker() == oldDefault ) {
+					markerItem.setMarker( newDefault );
+				}
+			}
+
+			mapView.map().updateMap();
+			promise.resolve( uuid );
+		} catch( Exception e ) {
+			e.printStackTrace();
+			promise.reject( "Error", e );
+		}
+	}
+
+	@Override
+	public void updateMarker( ReadableMap params, Promise promise ) {
+		try {
+			if ( ! Utils.rMapHasKey( params, "nativeNodeHandle" ) ) {
+				Utils.promiseReject( promise,"Undefined nativeNodeHandle" ); return;
+			}
+			MapView mapView = Utils.getMapView( getReactApplicationContext(), params.getInt( "nativeNodeHandle" ) );
+			MapFragment mapFragment = Utils.getMapFragment( getReactApplicationContext(), params.getInt( "nativeNodeHandle" ) );
+			if ( null == mapView || null == mapFragment ) {
+				Utils.promiseReject( promise,"Unable to find mapView or mapFragment" ); return;
+			}
+			if ( ! Utils.rMapHasKey( params, "markerLayerUuid" ) ) {
+				Utils.promiseReject( promise,"Undefined markerLayerUuid" ); return;
+			}
+			ItemizedLayer markerLayer = (ItemizedLayer) layerHelper.getLayers().get( params.getString( "markerLayerUuid" ) );
+			if ( markerLayer == null ) {
+				Utils.promiseReject( promise,"Unable to find markerLayer" ); return;
+			}
+			if ( ! Utils.rMapHasKey( params, "uuid" ) ) {
+				Utils.promiseReject( promise,"Undefined uuid" ); return;
+			}
+			String uuid = params.getString( "uuid" );
+			MarkerItem markerItem = markers.get( uuid );
+			if ( markerItem == null ) {
+				Utils.promiseReject( promise,"Unable to find marker" ); return;
+			}
+
+			boolean positionChanged = false;
+			if ( Utils.rMapHasKey( params, "position" ) ) {
+				ReadableArray position = params.getArray( "position" );
+				markerItem.geoPoint = new GeoPoint(
+					Utils.latFromPosition( position ),
+					Utils.lngFromPosition( position )
+				);
+				positionChanged = true;
+			}
+			if ( Utils.rMapHasKey( params, "symbol" ) ) {
+				MarkerSymbol symbol = getMarkerSymbol(
+					params.getMap( "symbol" ),
+					mapFragment.getActivity().getContentResolver()
+				);
+				markerItem.setMarker( symbol );
+			}
+
+			// Position is cached at populate() time as pre-projected map
+			// coordinates, so it needs an explicit re-populate. Symbol is read
+			// fresh from the item every frame, so a plain map update covers it.
+			if ( positionChanged ) {
+				markerLayer.populate();
+			}
+			mapView.map().updateMap();
+
+			promise.resolve( uuid );
+		} catch( Exception e ) {
+			e.printStackTrace();
+			promise.reject( "Error", e );
+		}
 	}
 
 	protected MarkerSymbol getMarkerSymbol( ReadableMap symbolMap, ContentResolver contentResolver ) {

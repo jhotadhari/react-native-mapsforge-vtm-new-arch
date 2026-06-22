@@ -35,6 +35,7 @@ const Marker = ({
 	onTrigger,
 }: MarkerProps) => {
 	const [uuid, setUuid] = useState<null | false | string>(null);
+	const indexRef = useRef<number>(-1);
 
 	const createMarkerRef = useRef<
 		| undefined
@@ -64,6 +65,7 @@ const Marker = ({
 				})
 					.then((response: MarkerResponse) => {
 						setUuid(response.uuid);
+						indexRef.current = response.index;
 						triggerOnCreate && onCreate ? onCreate(response) : null;
 						triggerOnChange && onChange ? onChange(response) : null;
 					})
@@ -144,25 +146,39 @@ const Marker = ({
 		uuid,
 	]);
 
+	// Update the existing native marker in place when its position or symbol
+	// changes, instead of tearing down and recreating it.
 	useEffect(() => {
-		removeMarkerRef?.current &&
-			removeMarkerRef
-				?.current({
-					triggerOnRemove: false,
+		if (uuid && markerLayerUuid && nativeNodeHandle) {
+			LayerMarkerModule.updateMarker({
+				nativeNodeHandle,
+				markerLayerUuid,
+				uuid,
+				...(position && { position }),
+				...(symbol && { symbol }),
+			})
+				.then((updatedUuid: string) => {
+					onChange
+						? onChange({
+								uuid: updatedUuid,
+								nativeNodeHandle,
+								index: indexRef.current,
+							})
+						: null;
 				})
-				.then((success) => {
-					if (success) {
-						setUuid(null);
-						createMarkerRef?.current &&
-							createMarkerRef?.current({
-								triggerOnCreate: false,
-								triggerOnChange: true,
-							});
-					}
+				.catch((err: ErrorBase) => {
+					console.log('ERROR', err.userInfo.errorMsg);
+					onError ? onError(err) : null;
 				});
+		}
 	}, [
+		uuid,
+		markerLayerUuid,
+		nativeNodeHandle,
 		position,
 		symbol,
+		onChange,
+		onError,
 	]);
 
 	useMarkerEventSubscription({
