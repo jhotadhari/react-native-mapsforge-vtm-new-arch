@@ -47,25 +47,6 @@ public class LayerHelper {
 		return uuid;
 	}
 
-	public String replaceLayer( int nativeNodeHandle, String uuid, Layer layer) {
-
-		int layerIndex = getLayerIndexInMapLayers( nativeNodeHandle, uuid );
-		if ( -1 == layerIndex ) {
-			return "Layer index not found";
-		}
-
-		MapView mapView = Utils.getMapView( reactContext, nativeNodeHandle );
-		if ( null == mapView ) { return null; }
-
-		// Replace old vectorLayer with new one on map.
-		mapView.map().layers().set( layerIndex, layer );
-
-		mapView.map().updateMap();
-		layers.put( uuid, layer );
-
-		return null;
-	}
-
 	public String addLayer( Layer layer, ReadableMap params ) {
 		String uuid = UUID.randomUUID().toString();
 		return addLayer( layer, params, uuid );

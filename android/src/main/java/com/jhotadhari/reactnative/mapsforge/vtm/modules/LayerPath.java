@@ -343,65 +343,6 @@ public class LayerPath extends NativeLayerPathSpec {
 	}
 
 	@ReactMethod
-	public void updateStyle( ReadableMap params, Promise promise ) {
-		WritableMap responseParams = new WritableNativeMap();
-		try {
-			if ( ! Utils.rMapHasKey( params, "nativeNodeHandle" ) ) {
-				Utils.promiseReject( promise,"Undefined nativeNodeHandle" ); return;
-			}
-			if ( ! Utils.rMapHasKey( params, "uuid" ) ) {
-				Utils.promiseReject( promise,"Undefined uuid" ); return;
-			}
-			String uuid = params.getString( "uuid" );
-			responseParams.putString( "uuid", uuid );
-			MapView mapView = Utils.getMapView( getReactApplicationContext(), params.getInt( "nativeNodeHandle" ) );
-			MapFragment mapFragment = Utils.getMapFragment( getReactApplicationContext(), params.getInt( "nativeNodeHandle" ) );
-			if ( null == mapView || null == mapFragment ) {
-				Utils.promiseReject( promise,"Unable to find mapView or mapFragment" ); return;
-			}
-
-			// Get params, assign defaults.
-			ReadableMap responseInclude = Utils.rMapHasKey( params, "responseInclude" ) ? params.getMap( "responseInclude" ) : (ReadableMap) getConstants().get( "responseInclude" );
-			ReadableMap style = Utils.rMapHasKey( params, "style" ) ? params.getMap( "style" ) : (ReadableMap) getConstants().get( "style" );
-
-			VectorLayer vectorLayer = (VectorLayer) layerHelper.getLayers().get( uuid );
-			if ( null == vectorLayer ) {
-				Utils.promiseReject( promise,"Layer not found" ); return;
-			}
-
-			// Create new vectorLayer.
-			VectorLayer vectorLayerNew = new VectorLayer(
-				mapView.map(),
-				uuid,
-				vectorLayer.getSupportsGestures(),
-				vectorLayer.getGestureListener(),
-				vectorLayer.getGestureScreenDistance()
-			);
-
-			// draw new
-			drawLineForCoordinates(
-				originalJtsCoordinatesMap.get( uuid ),
-				getStyleBuilderFromMap( style ),
-				uuid,
-				vectorLayerNew
-			);
-
-			layerHelper.replaceLayer(
-				params.getInt( "nativeNodeHandle" ),
-				uuid,
-				vectorLayerNew
-			);
-
-			addStuffToResponse( uuid, responseInclude, 1, responseParams );
-
-		} catch( Exception e ) {
-			e.printStackTrace();
-			promise.reject( "Error", e );
-		}
-		promise.resolve( responseParams );
-	}
-
-	@ReactMethod
 	public void updateSupportsGestures( ReadableMap params, Promise promise ) {
 		WritableMap responseParams = new WritableNativeMap();
 		try {

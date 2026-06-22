@@ -69,37 +69,6 @@ interface CreateLayerParams extends ModuleParams {
 	supportsGestures?: boolean;
 }
 
-interface UpdateStyleParams {
-	nativeNodeHandle?: Int32;
-	uuid?: string;
-	style?: {
-		// GeometryStyle
-		strokeWidth?: Double;
-		strokeColor?: string;
-		fillColor?: string;
-		fillAlpha?: Double;
-		buffer?: Double;
-		scalingZoomLevel?: Int32;
-		cap?: string;
-		fixed?: boolean;
-		strokeIncrease?: Double;
-		blur?: Double;
-		stipple?: Int32;
-		stippleColor?: string;
-		stippleWidth?: Double;
-		dropDistance?: Double;
-		textureRepeat?: boolean;
-		heightOffset?: Double;
-		randomOffset?: boolean;
-		transparent?: boolean;
-	};
-	responseInclude?: {
-		// ResponseInclude
-		coordinates?: Int32;
-		bounds?: Int32;
-	};
-}
-
 interface UpdateCoordinatesParams {
 	nativeNodeHandle?: Int32;
 	uuid?: string;
@@ -225,7 +194,6 @@ export interface Spec extends TurboModule {
 	createLayer(params: CreateLayerParams): Promise<LayerPathResponse>;
 	removeLayer(params: RemoveLayerParams): Promise<string>;
 
-	updateStyle(params: UpdateStyleParams): Promise<LayerPathResponse>;
 	updateCoordinates(
 		params: UpdateCoordinatesParams
 	): Promise<LayerPathResponse>;

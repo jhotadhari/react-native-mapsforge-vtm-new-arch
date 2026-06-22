@@ -164,22 +164,8 @@ const LayerPath = ({
 		uuid,
 	]);
 
-	// useEffect( () => {
-	// 	if ( nativeNodeHandle && uuid ) {
-	// 			LayerPathModule.updateStyle(
-	// 				nativeNodeHandle,
-	// 				uuid,
-	// 				style,
-	// 				responseInclude
-	// 			).then( ( response: LayerPathResponse ) => {
-	// 				onChange ? onChange( response ) : null;
-	// 			} ).catch( ( err: ErrorBase ) => { console.log( 'ERROR', err.userInfo.errorMsg ); onError ? onError( err ) : null } );
-	// 			// } );
-	// 		}
-	// }, [Object.values( style ).join( '' )] );
-
-	// Redraw the existing native layer in place when the line itself changes,
-	// instead of tearing down and recreating the layer.
+	// Redraw the existing native layer in place when the line or its style
+	// changes, instead of tearing down and recreating the layer.
 	useEffect(() => {
 		if (uuid && nativeNodeHandle && coordinates && coordinates.length > 0) {
 			LayerPathModule.updateCoordinates({
