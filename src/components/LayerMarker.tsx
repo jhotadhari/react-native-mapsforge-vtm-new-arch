@@ -118,7 +118,11 @@ const LayerMarker = ({
 			remove();
 		}
 		return remove;
-	}, [uuid, triggerEvent]);
+	}, [
+		uuid,
+		triggerEvent,
+		nativeNodeHandle,
+	]);
 
 	useMarkerEventSubscription({
 		onEvent: onMarkerEvent,

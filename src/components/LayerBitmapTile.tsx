@@ -107,7 +107,13 @@ const LayerBitmapTile = ({
 				reportNativeError(err, onError);
 			});
 		}
-	}, [enabledZoomMin, enabledZoomMax]);
+	}, [
+		enabledZoomMin,
+		enabledZoomMax,
+		nativeNodeHandle,
+		uuid,
+		onError,
+	]);
 
 	useEffect(() => {
 		if (nativeNodeHandle && uuid) {
@@ -119,7 +125,12 @@ const LayerBitmapTile = ({
 				reportNativeError(err, onError);
 			});
 		}
-	}, [alpha]);
+	}, [
+		alpha,
+		nativeNodeHandle,
+		uuid,
+		onError,
+	]);
 
 	// There's no native "update in place" for these -- changing any of them requires tearing down
 	// and recreating the layer. triggerRemove resets uuid to null on success, which is what lets
