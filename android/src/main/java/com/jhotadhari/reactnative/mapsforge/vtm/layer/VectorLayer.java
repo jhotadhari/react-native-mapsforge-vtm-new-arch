@@ -74,12 +74,17 @@ public class VectorLayer extends org.oscim.layers.vector.VectorLayer {
 		}
 		WritableMap params = containsGetResponse( e.getX(), e.getY() );
 		if (  null != params ) {
+			// Gesture.Press fires on every raw touch-down (before it's known to be a
+			// tap vs. the start of a pan/drag) - consuming it here would swallow the
+			// down event before it reaches MapEventLayer and break map panning.
+			// Gesture.Tap only fires once a single tap is confirmed, mirroring how
+			// ItemizedLayer (markers) detects taps.
 			String type = null;
 			if ( g instanceof Gesture.DoubleTap ) {
 				type = "doubleTap";
 			} else if ( g instanceof Gesture.LongPress ) {
 				type = "longPress";
-			} else if ( g instanceof Gesture.Press ) {
+			} else if ( g instanceof Gesture.Tap ) {
 				type = "press";
 			}
 			if ( null == type ) {
