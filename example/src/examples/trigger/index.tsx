@@ -1,5 +1,4 @@
 import {
-	useCallback,
 	useMemo,
 	useRef,
 	useState,
@@ -13,7 +12,6 @@ import {
 	Text,
 	Button,
 	PixelRatio,
-	type NativeSyntheticEvent,
 	StyleSheet,
 } from 'react-native';
 import {
@@ -23,7 +21,6 @@ import {
 	MapContainer,
 	Marker,
 	type LayerPathTypes,
-	type MapEventResponse,
 	type MarkerTypes,
 	type Position,
 } from 'react-native-mapsforge-vtm';

@@ -1,11 +1,10 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
 	View,
 	StyleSheet,
 	Button,
 	useWindowDimensions,
 	Text,
-	PixelRatio,
 	type LayoutChangeEvent,
 } from 'react-native';
 
