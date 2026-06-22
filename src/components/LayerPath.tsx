@@ -9,8 +9,10 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import LayerPathModule, {
 	type LayerPathProps,
 	type LayerPathResponse,
+	type TriggerParams,
 } from '../NativeModules/NativeLayerPath';
 import type { ErrorBase } from '../types';
+import useLayerPathEventSubscription from '../compose/useLayerPathEventSubscription';
 
 const moduleDefaults = LayerPathModule.getConstants();
 
@@ -31,6 +33,8 @@ const LayerPath = ({
 	onPress,
 	onLongPress,
 	onDoubleTap,
+	onTrigger,
+	triggerEvent,
 }: LayerPathProps) => {
 	const [uuid, setUuid] = useState<null | false | string>(null);
 
@@ -41,8 +45,6 @@ const LayerPath = ({
 		}),
 		[responseIncludeParams]
 	);
-
-	// const supportsGestures = !! onPress || !! onLongPress || !! onDoubleTap;
 
 	const createLayerRef = useRef<
 		| undefined
@@ -199,37 +201,39 @@ const LayerPath = ({
 	// 	Object.keys( responseInclude ).map( key => key + responseInclude[key] ).join( '' ),
 	// ] );
 
-	// useEffect( () => {
-	// 	const eventEmitter = new NativeEventEmitter();
-	// 	let eventListener = eventEmitter.addListener( 'PathGesture', ( response : LayerPathGestureResponse ) => {
-	// 		if ( response.uuid === uuid ) {
-	// 			switch( response.type ) {
-	// 				case 'doubleTap':
-	// 					onDoubleTap ? onDoubleTap( response ) : null;
-	// 					break;
-	// 				case 'LongPress':
-	// 					onLongPress ? onLongPress( response ) : null;
-	// 					break;
-	// 				case 'press':
-	// 					onPress ? onPress( response ) : null;
-	// 					break;
-	// 				case 'trigger':
-	// 					onTrigger ? onTrigger( response ) : null;
-	// 					break;
-	// 			}
-	// 		}
-	// 	} );
-	// 	return () => {
-	// 		eventListener.remove();
-	// 	};
-	// }, [
-	// 	uuid,
-	// 	!! supportsGestures,
-	// 	onDoubleTap,
-	// 	onLongPress,
-	// 	onPress,
-	// 	onTrigger,
-	// ] );
+	useEffect(() => {
+		const remove = () => {
+			if (triggerEvent) {
+				triggerEvent.current = null;
+			}
+		};
+		if (uuid) {
+			if (triggerEvent) {
+				triggerEvent.current = (params: TriggerParams) => {
+					LayerPathModule.triggerEvent({
+						...(nativeNodeHandle && { nativeNodeHandle }),
+						uuid,
+						...params,
+					});
+				};
+			}
+		} else {
+			remove();
+		}
+		return remove;
+	}, [
+		uuid,
+		nativeNodeHandle,
+		triggerEvent,
+	]);
+
+	useLayerPathEventSubscription({
+		uuid,
+		onPress,
+		onLongPress,
+		onDoubleTap,
+		onTrigger,
+	});
 
 	return null;
 };

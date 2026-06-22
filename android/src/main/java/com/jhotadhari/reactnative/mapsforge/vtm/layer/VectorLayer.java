@@ -1,6 +1,5 @@
 package com.jhotadhari.reactnative.mapsforge.vtm.layer;
 
-import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableNativeMap;
 import com.jhotadhari.reactnative.mapsforge.vtm.Utils;
@@ -16,34 +15,39 @@ import org.oscim.utils.geom.GeomBuilder;
 
 public class VectorLayer extends org.oscim.layers.vector.VectorLayer {
 
-	protected final ReactContext mReactContext;
+	/**
+	 * Notified whenever a gesture (or a manual trigger) hits this layer's geometry.
+	 * Implemented by the owning module, so it can emit the event through its own
+	 * codegen EventEmitter without this layer needing a reference to the TurboModule.
+	 */
+	public interface GestureListener {
+		void onGesture( String type, WritableMap params );
+	}
+
 	protected final String mUuid;
 	protected final Boolean mSupportsGestures;
-	protected final String mGestureEventName;
+	protected final GestureListener mGestureListener;
 	protected float mGestureScreenDistance = 30f;
 
 	public VectorLayer( Map map, SpatialIndex<Drawable> index ) {
 		super( map, index );
-		mReactContext = null;
 		mUuid = null;
 		mSupportsGestures = false;
-		mGestureEventName = null;
+		mGestureListener = null;
 	}
 
 	public VectorLayer( Map map ) {
 		super( map );
-		mReactContext = null;
 		mUuid = null;
 		mSupportsGestures = false;
-		mGestureEventName = null;
+		mGestureListener = null;
 	}
 
-	public VectorLayer( Map map, String uuid, ReactContext reactContext, Boolean supportsGestures, String gestureEventName, float gestureScreenDistance ) {
+	public VectorLayer( Map map, String uuid, Boolean supportsGestures, GestureListener gestureListener, float gestureScreenDistance ) {
 		super( map );
-		mReactContext = reactContext;
 		mUuid = uuid;
 		mSupportsGestures = supportsGestures;
-		mGestureEventName = gestureEventName;
+		mGestureListener = gestureListener;
 		mGestureScreenDistance = gestureScreenDistance;
 	}
 
@@ -55,8 +59,8 @@ public class VectorLayer extends org.oscim.layers.vector.VectorLayer {
 		return mGestureScreenDistance;
 	}
 
-	public String getGestureEventName() {
-		return mGestureEventName;
+	public GestureListener getGestureListener() {
+		return mGestureListener;
 	}
 
 	public boolean getSupportsGestures() {
@@ -65,7 +69,7 @@ public class VectorLayer extends org.oscim.layers.vector.VectorLayer {
 
 	@Override
 	public boolean onGesture( Gesture g, MotionEvent e ) {
-		if ( mReactContext == null || ! mSupportsGestures ) {
+		if ( mGestureListener == null || ! mSupportsGestures ) {
 			return false;
 		}
 		WritableMap params = containsGetResponse( e.getX(), e.getY() );
@@ -90,8 +94,7 @@ public class VectorLayer extends org.oscim.layers.vector.VectorLayer {
 					eventPoint.getLatitude(),
 					null
 				) );
-				// sendEvent
-//				Utils.sendEvent( mReactContext, mGestureEventName, params );
+				mGestureListener.onGesture( type, params );
 				return true;
 			}
 		}

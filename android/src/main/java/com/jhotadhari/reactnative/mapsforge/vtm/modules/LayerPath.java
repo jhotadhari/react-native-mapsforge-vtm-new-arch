@@ -175,8 +175,9 @@ public class LayerPath extends NativeLayerPathSpec {
 			if ( ! Utils.rMapHasKey( params, "nativeNodeHandle" ) ) {
 				Utils.promiseReject( promise,"Undefined nativeNodeHandle" ); return;
 			}
-			MapView mapView = Utils.getMapView( getReactApplicationContext(), params.getInt( "nativeNodeHandle" ) );
-			MapFragment mapFragment = Utils.getMapFragment( getReactApplicationContext(), params.getInt( "nativeNodeHandle" ) );
+			int nativeNodeHandle = params.getInt( "nativeNodeHandle" );
+			MapView mapView = Utils.getMapView( getReactApplicationContext(), nativeNodeHandle );
+			MapFragment mapFragment = Utils.getMapFragment( getReactApplicationContext(), nativeNodeHandle );
 			if ( null == mapView || null == mapFragment ) {
 				Utils.promiseReject( promise,"Unable to find mapView or mapFragment" ); return;
 			}
@@ -198,9 +199,8 @@ public class LayerPath extends NativeLayerPathSpec {
 			VectorLayer vectorLayer = new VectorLayer(
 				mapView.map(),
 				uuid,
-				getReactApplicationContext(),
 				supportsGestures,
-				"PathGesture",
+				getGestureListener( nativeNodeHandle ),
 				(float) gestureScreenDistance
 			);
 
@@ -238,39 +238,52 @@ public class LayerPath extends NativeLayerPathSpec {
 		}
 	}
 
-//
-//	@ReactMethod
-//	public void triggerEvent(
-//			int nativeNodeHandle,
-//			String layerUuid,
-//			float x,
-//			float y,
-//			Promise promise
-//	) {
-//		MapFragment mapFragment = Utils.getMapFragment( this.getReactApplicationContext(), nativeNodeHandle );
-//		MapView mapView = (MapView) Utils.getMapView( this.getReactApplicationContext(), nativeNodeHandle );
-//		if ( mapFragment == null || null == mapView ) {
-//			promise.reject( "Error", "Unable to find mapView or mapFragment" ); return;
-//		}
-//		VectorLayer vectorLayer = layers.get( layerUuid );
-//		if ( vectorLayer == null ) {
-//			promise.reject( "Error", "Unable to find vectorLayer" ); return;
-//		}
-//		WritableMap params = vectorLayer.containsGetResponse( x, y );
-//		if (  null != params ) {
-//			// Add type
-//			params.putString( "type", "trigger" );
-//			// Add eventPosition
-//			WritableMap eventPosition = new WritableNativeMap();
-//			GeoPoint eventPoint = mapView.map().viewport().fromScreenPoint( x, y );
-//			eventPosition.putDouble("lng", eventPoint.getLongitude() );
-//			eventPosition.putDouble("lat", eventPoint.getLatitude() );
-//			params.putMap( "eventPosition", eventPosition );
-//			// sendEvent
-//			Utils.sendEvent( mapFragment.getReactContext(), vectorLayer.getGestureEventName(), params );
-//		}
-//		promise.resolve( params );
-//	}
+	@Override
+	public void triggerEvent( ReadableMap params ) {
+		if ( ! Utils.rMapHasKey( params, "nativeNodeHandle" ) ) {
+			return;
+		}
+		int nativeNodeHandle = params.getInt( "nativeNodeHandle" );
+		MapView mapView = Utils.getMapView( getReactApplicationContext(), nativeNodeHandle );
+		if ( null == mapView ) {
+			return;
+		}
+		if ( ! Utils.rMapHasKey( params, "uuid" ) ) {
+			return;
+		}
+		VectorLayer vectorLayer = (VectorLayer) layerHelper.getLayers().get( params.getString( "uuid" ) );
+		if ( null == vectorLayer ) {
+			return;
+		}
+		if ( ! Utils.rMapHasKey( params, "x" ) || ! Utils.rMapHasKey( params, "y" ) ) {
+			return;
+		}
+		float x = params.getInt( "x" );
+		float y = params.getInt( "y" );
+		WritableMap eventParams = vectorLayer.containsGetResponse( x, y );
+		if ( null == eventParams ) {
+			return;
+		}
+		// Add nativeNodeHandle
+		eventParams.putInt( "nativeNodeHandle", nativeNodeHandle );
+		// Add type
+		eventParams.putString( "type", "trigger" );
+		// Add eventPosition
+		GeoPoint eventPoint = mapView.map().viewport().fromScreenPoint( x, y );
+		eventParams.putArray( "eventPosition", Utils.positionToWritableArray(
+			eventPoint.getLongitude(),
+			eventPoint.getLatitude(),
+			null
+		) );
+		emitOnPathEvent( eventParams );
+	}
+
+	protected VectorLayer.GestureListener getGestureListener( int nativeNodeHandle ) {
+		return ( type, eventParams ) -> {
+			eventParams.putInt( "nativeNodeHandle", nativeNodeHandle );
+			emitOnPathEvent( eventParams );
+		};
+	}
 
 	@ReactMethod
 	public void updateStyle( ReadableMap params, Promise promise ) {
@@ -303,9 +316,8 @@ public class LayerPath extends NativeLayerPathSpec {
 			VectorLayer vectorLayerNew = new VectorLayer(
 				mapView.map(),
 				uuid,
-				getReactApplicationContext(),
 				vectorLayer.getSupportsGestures(),
-				vectorLayer.getGestureEventName(),
+				vectorLayer.getGestureListener(),
 				vectorLayer.getGestureScreenDistance()
 			);
 

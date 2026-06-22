@@ -1,7 +1,12 @@
 import type { TurboModule } from 'react-native';
 import { TurboModuleRegistry } from 'react-native';
-import type { Double, Int32 } from 'react-native/Libraries/Types/CodegenTypes';
+import type {
+	Double,
+	EventEmitter,
+	Int32,
+} from 'react-native/Libraries/Types/CodegenTypes';
 import type { Position as GeoJsonPosition } from 'geojson';
+import type { RefObject } from 'react';
 import type { ErrorBase } from '../types';
 
 /*
@@ -112,6 +117,20 @@ interface RemoveLayerParams {
 	uuid: string;
 }
 
+export type TriggerEvent = (params: TriggerParams) => void;
+
+export interface TriggerParams {
+	x?: Double;
+	y?: Double;
+}
+
+interface TriggerParamsCG {
+	nativeNodeHandle?: Int32;
+	uuid?: string;
+	x?: Double;
+	y?: Double;
+}
+
 export type Bounds = {
 	minLat: Double;
 	minLng: Double;
@@ -130,10 +149,10 @@ export interface LayerPathResponse extends ResponseBase {
 }
 
 export interface LayerPathGestureResponse extends ResponseBase {
-	type: string;
-	distance: number;
-	nearestPoint: GeoJsonPosition;
-	eventPosition: GeoJsonPosition;
+	type: string; // 'press' | 'longPress' | 'doubleTap' | 'trigger'
+	distance: Double;
+	nearestPoint: Position;
+	eventPosition: Position;
 }
 
 export type LayerPathProps = {
@@ -153,6 +172,7 @@ export type LayerPathProps = {
 	onLongPress?: null | ((response: LayerPathGestureResponse) => void);
 	onDoubleTap?: null | ((response: LayerPathGestureResponse) => void);
 	onTrigger?: null | ((response: LayerPathGestureResponse) => void);
+	triggerEvent?: RefObject<null | TriggerEvent>;
 };
 
 export interface Spec extends TurboModule {
@@ -164,7 +184,8 @@ export interface Spec extends TurboModule {
 	updateGestureScreenDistance(
 		params: UpdateGestureScreenDistanceParams
 	): Promise<LayerPathResponse>;
-	// triggerEvent( params: TriggerParamsCG ): void;
+	triggerEvent(params: TriggerParamsCG): void;
+	onPathEvent: EventEmitter<LayerPathGestureResponse>;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>('LayerPath');

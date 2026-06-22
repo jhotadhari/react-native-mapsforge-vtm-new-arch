@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import {
 	View,
 	StyleSheet,
@@ -12,6 +12,7 @@ import {
 	LayerBitmapTile,
 	LayerMarker,
 	LayerPath,
+	LayerPathTypes,
 	MapContainer,
 	Marker,
 	MarkerTypes,
@@ -73,13 +74,15 @@ export default function App() {
 
 	// const [mapState,setMapState] = useState<MapEventResponse>( {} );
 	const [hasMarker, setHasMarker] = useState(true);
-	const [enableBtns, setEnableBtns] = useState(false);
 
-	const triggerEvent = useRef<MarkerTypes.TriggerEvent>(null);
+	const [lastMarkerEvent, setLastMarkerEvent] = useState('-');
+	const [lastPathEvent, setLastPathEvent] = useState('-');
 
-	useEffect(() => {
-		setEnableBtns(!!triggerEvent?.current);
-	}, [triggerEvent?.current]);
+	const triggerMarkerEvent = useRef<MarkerTypes.TriggerEvent>(null);
+	const triggerPathEvent = useRef<LayerPathTypes.TriggerEvent>(null);
+
+	const centerX = PixelRatio.getPixelSizeForLayoutSize(width) / 2;
+	const centerY = PixelRatio.getPixelSizeForLayoutSize(height) / 2;
 
 	return (
 		<View style={styles.container}>
@@ -88,67 +91,73 @@ export default function App() {
 				onPress={() => setHasMarker(!hasMarker)}
 			/>
 
-			<View
-				style={{
-					width,
-					flexDirection: 'row',
-					justifyContent: 'space-evenly',
-				}}
-			>
-				<Button
-					disabled={enableBtns}
-					onPress={() => {
-						triggerEvent?.current &&
-							triggerEvent?.current({
-								x:
-									PixelRatio.getPixelSizeForLayoutSize(
-										width
-									) / 2,
-								y:
-									PixelRatio.getPixelSizeForLayoutSize(
-										height
-									) / 2,
-								strategy: 'all',
-							});
+			<View style={styles.eventSection}>
+				<Text style={styles.eventSectionTitle}>Marker events</Text>
+				<Text>{lastMarkerEvent}</Text>
+				<View
+					style={{
+						width,
+						flexDirection: 'row',
+						justifyContent: 'space-evenly',
 					}}
-					title={'Trigger all'}
-				/>
-				<Button
-					disabled={enableBtns}
-					onPress={() => {
-						triggerEvent?.current &&
-							triggerEvent?.current({
-								x:
-									PixelRatio.getPixelSizeForLayoutSize(
-										width
-									) / 2,
-								y:
-									PixelRatio.getPixelSizeForLayoutSize(
-										height
-									) / 2,
-								strategy: 'first',
-							});
+				>
+					<Button
+						onPress={() => {
+							triggerMarkerEvent?.current &&
+								triggerMarkerEvent?.current({
+									x: centerX,
+									y: centerY,
+									strategy: 'all',
+								});
+						}}
+						title={'Trigger all'}
+					/>
+					<Button
+						onPress={() => {
+							triggerMarkerEvent?.current &&
+								triggerMarkerEvent?.current({
+									x: centerX,
+									y: centerY,
+									strategy: 'first',
+								});
+						}}
+						title={'Trigger first'}
+					/>
+					<Button
+						onPress={() => {
+							triggerMarkerEvent?.current &&
+								triggerMarkerEvent?.current({
+									x: centerX,
+									y: centerY,
+									strategy: 'nearest',
+								});
+						}}
+						title={'Trigger nearest'}
+					/>
+				</View>
+			</View>
+
+			<View style={styles.eventSection}>
+				<Text style={styles.eventSectionTitle}>Path events</Text>
+				<Text>{lastPathEvent}</Text>
+				<View
+					style={{
+						width,
+						flexDirection: 'row',
+						justifyContent: 'space-evenly',
 					}}
-					title={'Trigger first'}
-				/>
-				<Button
-					disabled={enableBtns}
-					onPress={() => {
-						triggerEvent?.current &&
-							triggerEvent?.current({
-								x:
-									PixelRatio.getPixelSizeForLayoutSize(
-										width
-									) / 2,
-								y:
-									PixelRatio.getPixelSizeForLayoutSize(
-										height
-									) / 2,
-								strategy: 'nearest',
-							});
-					}}
-					title={'Trigger nearest'}
-				/>
+				>
+					<Button
+						onPress={() => {
+							triggerPathEvent?.current &&
+								triggerPathEvent?.current({
+									x: centerX,
+									y: centerY,
+								});
+						}}
+						title={'Trigger path'}
+					/>
+				</View>
 			</View>
 
 			<View
@@ -192,12 +201,35 @@ export default function App() {
 				>
 					<LayerBitmapTile />
 
-					<LayerPath coordinates={coordinates} />
+					<LayerPath
+						coordinates={coordinates}
+						onPress={(response) => {
+							console.log('debug onPress', response); // debug
+							setLastPathEvent(`press dist=${response.distance.toFixed(4)}`);
+						}}
+						onLongPress={(response) => {
+							console.log('debug onLongPress', response); // debug
+							setLastPathEvent(`longPress dist=${response.distance.toFixed(4)}`);
+						}}
+						onDoubleTap={(response) => {
+							console.log('debug onDoubleTap', response); // debug
+							setLastPathEvent(`doubleTap dist=${response.distance.toFixed(4)}`);
+						}}
+						onTrigger={(response) => {
+							console.log('debug onTrigger', response); // debug
+							setLastPathEvent(`trigger dist=${response.distance.toFixed(4)}`);
+						}}
+						triggerEvent={triggerPathEvent}
+					/>
 
 					<LayerMarker
-						triggerEvent={triggerEvent}
+						triggerEvent={triggerMarkerEvent}
 						onMarkerEvent={(response?: MarkerTypes.MarkerEvent) => {
 							console.log('debug onMarkerEvent', response); // debug
+							response &&
+								setLastMarkerEvent(
+									`${response.event} marker #${response.index}`
+								);
 						}}
 					>
 						{hasMarker &&
@@ -238,5 +270,11 @@ const styles = StyleSheet.create({
 		flex: 1,
 		alignItems: 'center',
 		justifyContent: 'space-evenly',
+	},
+	eventSection: {
+		alignItems: 'center',
+	},
+	eventSectionTitle: {
+		fontWeight: 'bold',
 	},
 });

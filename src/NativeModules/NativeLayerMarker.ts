@@ -94,6 +94,7 @@ interface EventError {
 
 export interface MarkerEvent extends ResponseBase {
 	event: string;
+	index: Int32;
 	distance?: Double;
 }
 
