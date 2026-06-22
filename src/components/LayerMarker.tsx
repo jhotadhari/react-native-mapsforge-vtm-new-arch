@@ -208,7 +208,7 @@ const LayerMarker = ({
 							});
 					}
 				});
-	}, [symbol ? Object.values(symbol).join('') : null]);
+	}, [symbol]);
 
 	const wrappedChildren = useMemo(() => {
 		const wrapChildren = (children: ReactNode): null | ReactNode =>
