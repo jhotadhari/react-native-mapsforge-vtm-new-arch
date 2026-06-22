@@ -112,6 +112,18 @@ interface UpdateGestureScreenDistanceParams {
 	};
 }
 
+interface UpdateSupportsGesturesParams {
+	nativeNodeHandle?: Int32;
+	uuid?: string;
+	supportsGestures?: boolean;
+
+	responseInclude?: {
+		// ResponseInclude
+		coordinates?: Int32;
+		bounds?: Int32;
+	};
+}
+
 interface RemoveLayerParams {
 	nativeNodeHandle: Int32;
 	uuid: string;
@@ -183,6 +195,9 @@ export interface Spec extends TurboModule {
 	updateStyle(params: UpdateStyleParams): Promise<LayerPathResponse>;
 	updateGestureScreenDistance(
 		params: UpdateGestureScreenDistanceParams
+	): Promise<LayerPathResponse>;
+	updateSupportsGestures(
+		params: UpdateSupportsGesturesParams
 	): Promise<LayerPathResponse>;
 	triggerEvent(params: TriggerParamsCG): void;
 	onPathEvent: EventEmitter<LayerPathGestureResponse>;

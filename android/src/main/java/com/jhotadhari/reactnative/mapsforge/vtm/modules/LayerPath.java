@@ -345,6 +345,39 @@ public class LayerPath extends NativeLayerPathSpec {
 	}
 
 	@ReactMethod
+	public void updateSupportsGestures( ReadableMap params, Promise promise ) {
+		WritableMap responseParams = new WritableNativeMap();
+		try {
+			if ( ! Utils.rMapHasKey( params, "nativeNodeHandle" ) ) {
+				Utils.promiseReject( promise,"Undefined nativeNodeHandle" ); return;
+			}
+			if ( ! Utils.rMapHasKey( params, "uuid" ) ) {
+				Utils.promiseReject( promise,"Undefined uuid" ); return;
+			}
+			String uuid = params.getString( "uuid" );
+			responseParams.putString( "uuid", uuid );
+			MapView mapView = Utils.getMapView( getReactApplicationContext(), params.getInt( "nativeNodeHandle" ) );
+			if ( null == mapView ) {
+				Utils.promiseReject( promise,"Unable to find mapView" ); return;
+			}
+			VectorLayer vectorLayer = (VectorLayer) layerHelper.getLayers().get( uuid );
+			if ( null == vectorLayer ) {
+				Utils.promiseReject( promise,"Layer not found" ); return;
+			}
+
+			// Get params, assign defaults.
+			boolean supportsGestures = Utils.rMapHasKey( params, "supportsGestures" ) && params.getBoolean( "supportsGestures" );
+			ReadableMap responseInclude = Utils.rMapHasKey( params, "responseInclude" ) ? params.getMap( "responseInclude" ) : (ReadableMap) getConstants().get( "responseInclude" );
+
+			vectorLayer.setSupportsGestures( supportsGestures );
+			addStuffToResponse( uuid, responseInclude, 1, responseParams );
+		} catch( Exception e ) {
+			promise.reject( "Error", e );
+		}
+		promise.resolve( responseParams );
+	}
+
+	@ReactMethod
 	public void updateGestureScreenDistance( ReadableMap params, Promise promise ) {
 		WritableMap responseParams = new WritableNativeMap();
 		try {

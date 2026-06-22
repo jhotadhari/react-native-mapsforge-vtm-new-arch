@@ -46,6 +46,9 @@ const LayerPath = ({
 		[responseIncludeParams]
 	);
 
+	// onTrigger is different, it doesn't require native gesture detection.
+	const supportsGestures = !!onPress || !!onLongPress || !!onDoubleTap;
+
 	const createLayerRef = useRef<
 		| undefined
 		| ((options: {
@@ -72,8 +75,7 @@ const LayerPath = ({
 				LayerPathModule.createLayer({
 					nativeNodeHandle,
 					reactTreeIndex,
-					supportsGestures:
-						!!onPress || !!onLongPress || !!onDoubleTap, // onTrigger is different
+					supportsGestures,
 					...(coordinates && { coordinates }),
 					...(style && { style }),
 					...(responseInclude && { responseInclude }),
@@ -99,9 +101,7 @@ const LayerPath = ({
 		responseInclude,
 		gestureScreenDistance,
 		simplificationTolerance,
-		onPress,
-		onLongPress,
-		onDoubleTap,
+		supportsGestures,
 		onCreate,
 		onChange,
 		onError,
@@ -196,6 +196,26 @@ const LayerPath = ({
 		coordinates,
 		simplificationTolerance,
 		responseInclude,
+	]);
+
+	// Update gesture detection on the existing native layer when the
+	// handlers change, instead of tearing down and recreating the layer.
+	useEffect(() => {
+		if (uuid && nativeNodeHandle) {
+			LayerPathModule.updateSupportsGestures({
+				nativeNodeHandle,
+				uuid,
+				supportsGestures,
+			}).catch((err: ErrorBase) => {
+				console.log('ERROR', err.userInfo.errorMsg);
+				onError ? onError(err) : null;
+			});
+		}
+	}, [
+		uuid,
+		nativeNodeHandle,
+		supportsGestures,
+		onError,
 	]);
 
 	useEffect(() => {

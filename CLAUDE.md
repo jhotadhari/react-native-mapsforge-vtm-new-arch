@@ -82,6 +82,17 @@ Native module event subscriptions (`onMarkerEvent`, etc.) are global per TurboMo
 layer instance), so component-level hooks like `useMarkerEventSubscription` filter incoming events by
 comparing `response.uuid` to the instance's own uuid.
 
+**Gestures vs. programmatic triggers (`LayerPath`):** native gesture detection (tap/long-press/double-tap)
+is enabled on the native layer via a `supportsGestures` flag, derived from whether
+`onPress`/`onLongPress`/`onDoubleTap` are set (`onTrigger` does *not* count). It's passed at `createLayer`
+time, and kept in sync afterwards via `updateSupportsGestures` (mutates `VectorLayer`'s flag in place) so
+toggling those handlers doesn't require tearing down and recreating the layer — follow this
+update-in-place pattern (see also `updateGestureScreenDistance`) rather than recreate-on-prop-change when
+adding similar live-tunable native layer state. Separately, `LayerPath` accepts a `triggerEvent` ref prop
+that it populates with an imperative function (`LayerPathModule.triggerEvent`) so a parent can fire a
+synthetic path event (handled by `onTrigger`) without going through real touch input — this is a ref-based
+escape hatch alongside the normal props-down/events-up flow, not a regular callback prop.
+
 Components generally accept `null`/`undefined` props and fall back to native defaults exposed via
 `<Module>.getConstants()` (e.g. `NativeMapContainer.getConstants()` in `MapContainer`,
 `LayerMarkerModule.getConstants()` in `Marker`/`LayerMarker`). When adding a new prop, prefer wiring it

@@ -25,7 +25,7 @@ public class VectorLayer extends org.oscim.layers.vector.VectorLayer {
 	}
 
 	protected final String mUuid;
-	protected final Boolean mSupportsGestures;
+	protected Boolean mSupportsGestures;
 	protected final GestureListener mGestureListener;
 	protected float mGestureScreenDistance = 30f;
 
@@ -65,6 +65,10 @@ public class VectorLayer extends org.oscim.layers.vector.VectorLayer {
 
 	public boolean getSupportsGestures() {
 		return mSupportsGestures;
+	}
+
+	public void setSupportsGestures( boolean supportsGestures ) {
+		mSupportsGestures = supportsGestures;
 	}
 
 	@Override
