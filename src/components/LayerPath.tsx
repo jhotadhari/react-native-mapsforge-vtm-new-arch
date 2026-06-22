@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useContext, useEffect, useMemo } from 'react';
 
 /**
  * Internal dependencies
@@ -14,6 +14,9 @@ import LayerPathModule, {
 import type { ErrorBase } from '../types';
 import useLayerPathEventSubscription from '../compose/useLayerPathEventSubscription';
 import useLayerOrder from '../compose/useLayerOrder';
+import useNativeLayerLifecycle from '../compose/useNativeLayerLifecycle';
+import reportNativeError from '../reportNativeError';
+import MapHandleContext from '../context/MapHandleContext';
 
 const moduleDefaults = LayerPathModule.getConstants();
 
@@ -35,9 +38,7 @@ const LayerPath = ({
 	onTrigger,
 	triggerEvent,
 }: LayerPathProps) => {
-	const [uuid, setUuid] = useState<null | false | string>(null);
-
-	const nativeNodeHandle = useLayerOrder(uuid);
+	const { nativeNodeHandle } = useContext(MapHandleContext);
 
 	const responseInclude = useMemo(
 		() => ({
@@ -50,113 +51,55 @@ const LayerPath = ({
 	// onTrigger is different, it doesn't require native gesture detection.
 	const supportsGestures = !!onPress || !!onLongPress || !!onDoubleTap;
 
-	const createLayerRef = useRef<
-		| undefined
-		| ((options: {
-				triggerOnCreate?: boolean;
-				triggerOnChange?: boolean;
-		  }) => void)
-	>(undefined);
+	const hasCoordinates = !!coordinates && coordinates.length > 0;
 
-	useEffect(() => {
-		createLayerRef.current = ({
-			triggerOnCreate,
-			triggerOnChange,
-		}: {
-			triggerOnCreate?: boolean;
-			triggerOnChange?: boolean;
-		}) => {
-			setUuid(false);
-			if (nativeNodeHandle && coordinates && coordinates.length > 0) {
-				LayerPathModule.createLayer({
-					nativeNodeHandle,
-					supportsGestures,
-					...(coordinates && { coordinates }),
-					...(style && { style }),
-					...(responseInclude && { responseInclude }),
-					...(gestureScreenDistance && { gestureScreenDistance }),
-					...(simplificationTolerance && { simplificationTolerance }),
-				})
-					.then((response: LayerPathResponse) => {
-						setUuid(response.uuid);
-						triggerOnCreate && onCreate ? onCreate(response) : null;
-						triggerOnChange && onChange ? onChange(response) : null;
-					})
-					.catch((err: ErrorBase) => {
-						console.log('ERROR', err.userInfo.errorMsg);
-						onError ? onError(err) : null;
-					});
+	const { uuid } = useNativeLayerLifecycle({
+		enabled: !!nativeNodeHandle && hasCoordinates,
+		create: ({ triggerOnCreate, triggerOnChange }) => {
+			if (!nativeNodeHandle || !coordinates) {
+				return Promise.reject<string>({
+					userInfo: {
+						errorMsg: 'Missing nativeNodeHandle or coordinates',
+					},
+				} as ErrorBase);
 			}
-		};
-	}, [
-		nativeNodeHandle,
-		coordinates,
-		style,
-		responseInclude,
-		gestureScreenDistance,
-		simplificationTolerance,
-		supportsGestures,
-		onCreate,
-		onChange,
-		onError,
-	]);
-
-	const removeLayerRef = useRef<
-		| undefined
-		| ((options: { triggerOnRemove?: boolean }) => Promise<boolean>)
-	>(undefined);
-
-	useEffect(() => {
-		removeLayerRef.current = ({
-			triggerOnRemove,
-		}: {
-			triggerOnRemove?: boolean;
-		}) => {
-			return new Promise<boolean>((resolve) => {
-				if (uuid && nativeNodeHandle) {
-					LayerPathModule.removeLayer({
-						nativeNodeHandle,
-						uuid,
-					})
-						.then((uuid: string) => {
-							triggerOnRemove && onRemove
-								? onRemove({ nativeNodeHandle, uuid })
-								: null;
-							resolve(true);
-						})
-						.catch((err: ErrorBase) => {
-							console.log('ERROR', err.userInfo.errorMsg);
-							onError ? onError(err) : null;
-							resolve(false);
-						});
-				}
+			return LayerPathModule.createLayer({
+				nativeNodeHandle,
+				supportsGestures,
+				coordinates,
+				...(style && { style }),
+				...(responseInclude && { responseInclude }),
+				...(gestureScreenDistance && { gestureScreenDistance }),
+				...(simplificationTolerance && { simplificationTolerance }),
+			}).then((response: LayerPathResponse) => {
+				triggerOnCreate && onCreate ? onCreate(response) : null;
+				triggerOnChange && onChange ? onChange(response) : null;
+				return response.uuid;
 			});
-		};
-	}, [
-		nativeNodeHandle,
-		uuid,
-		onRemove,
+		},
+		remove: (currentUuid, { triggerOnRemove }) => {
+			if (!nativeNodeHandle) {
+				return Promise.resolve(false);
+			}
+			return LayerPathModule.removeLayer({
+				nativeNodeHandle,
+				uuid: currentUuid,
+			})
+				.then((removedUuid) => {
+					triggerOnRemove && onRemove
+						? onRemove({ nativeNodeHandle, uuid: removedUuid })
+						: null;
+					return true;
+				})
+				.catch((err: ErrorBase) => {
+					reportNativeError(err, onError);
+					return false;
+				});
+		},
 		onError,
-	]);
+	});
 
-	useEffect(() => {
-		if (uuid === null && nativeNodeHandle) {
-			createLayerRef?.current &&
-				createLayerRef?.current({
-					triggerOnCreate: true,
-					triggerOnChange: false,
-				});
-		}
-		return () => {
-			removeLayerRef?.current &&
-				removeLayerRef?.current({
-					triggerOnRemove: true,
-				});
-		};
-	}, [
-		nativeNodeHandle,
-		uuid,
-	]);
+	useLayerOrder(uuid);
 
 	// Redraw the existing native layer in place when the line or its style
 	// changes, instead of tearing down and recreating the layer.
@@ -174,8 +117,7 @@ const LayerPath = ({
 					onChange ? onChange(response) : null;
 				})
 				.catch((err: ErrorBase) => {
-					console.log('ERROR', err.userInfo.errorMsg);
-					onError ? onError(err) : null;
+					reportNativeError(err, onError);
 				});
 		}
 	}, [
@@ -198,8 +140,7 @@ const LayerPath = ({
 				uuid,
 				supportsGestures,
 			}).catch((err: ErrorBase) => {
-				console.log('ERROR', err.userInfo.errorMsg);
-				onError ? onError(err) : null;
+				reportNativeError(err, onError);
 			});
 		}
 	}, [

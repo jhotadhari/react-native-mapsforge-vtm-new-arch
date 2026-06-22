@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { useEffect, useRef, useState } from 'react';
+import { useContext, useEffect } from 'react';
 
 /**
  * Internal dependencies
@@ -11,6 +11,9 @@ import LayerBitmapTileModule, {
 } from '../NativeModules/NativeLayerBitmapTile';
 import type { ErrorBase } from '../types';
 import useLayerOrder from '../compose/useLayerOrder';
+import useNativeLayerLifecycle from '../compose/useNativeLayerLifecycle';
+import reportNativeError from '../reportNativeError';
+import MapHandleContext from '../context/MapHandleContext';
 
 const LayerBitmapTile = ({
 	url,
@@ -27,133 +30,66 @@ const LayerBitmapTile = ({
 	onChange,
 	onError,
 }: LayerBitmapTileProps) => {
-	const [uuid, setUuid] = useState<null | false | string>(null);
+	const { nativeNodeHandle } = useContext(MapHandleContext);
 
-	const nativeNodeHandle = useLayerOrder(uuid);
-
-	const createLayerRef = useRef<
-		| undefined
-		| ((options: {
-				triggerOnCreate?: boolean;
-				triggerOnChange?: boolean;
-		  }) => void)
-	>(undefined);
-
-	useEffect(() => {
-		createLayerRef.current = ({
-			triggerOnCreate,
-			triggerOnChange,
-		}: {
-			triggerOnCreate?: boolean;
-			triggerOnChange?: boolean;
-		}) => {
-			setUuid(false);
-			if (nativeNodeHandle) {
-				LayerBitmapTileModule.createLayer({
-					nativeNodeHandle,
-					...(url && { url }),
-					...(alpha && { alpha }), // java side will ensure it is between 0 and 1.
-					...(zoomMin && { zoomMin: Math.round(zoomMin) }),
-					...(zoomMax && { zoomMax: Math.round(zoomMax) }),
-					...(enabledZoomMin && {
-						enabledZoomMin: Math.round(enabledZoomMin),
-					}),
-					...(enabledZoomMax && {
-						enabledZoomMax: Math.round(enabledZoomMax),
-					}),
-					...(cacheSize && { cacheSize: Math.round(cacheSize) }),
-					...(cacheDirBase && { cacheDirBase: cacheDirBase.trim() }),
-					...(cacheDirChild && {
-						cacheDirChild: cacheDirChild.trim(),
-					}),
-				})
-					.then((uuid: string) => {
-						setUuid(uuid);
-						triggerOnCreate && onCreate
-							? onCreate({ nativeNodeHandle, uuid })
-							: null;
-						triggerOnChange && onChange
-							? onChange({ nativeNodeHandle, uuid })
-							: null;
-					})
-					.catch((err: ErrorBase) => {
-						console.log('ERROR', err.userInfo.errorMsg);
-						onError ? onError(err) : null;
-					});
+	const { uuid, triggerCreate, triggerRemove } = useNativeLayerLifecycle({
+		enabled: !!nativeNodeHandle,
+		create: ({ triggerOnCreate, triggerOnChange }) => {
+			if (!nativeNodeHandle) {
+				return Promise.reject<string>({
+					userInfo: { errorMsg: 'Missing nativeNodeHandle' },
+				} as ErrorBase);
 			}
-		};
-	}, [
-		nativeNodeHandle,
-		url,
-		alpha,
-		zoomMin,
-		zoomMax,
-		enabledZoomMin,
-		enabledZoomMax,
-		cacheSize,
-		cacheDirBase,
-		cacheDirChild,
-		onCreate,
-		onChange,
-		onError,
-	]);
-
-	const removeLayerRef = useRef<
-		| undefined
-		| ((options: { triggerOnRemove?: boolean }) => Promise<boolean>)
-	>(undefined);
-
-	useEffect(() => {
-		removeLayerRef.current = ({
-			triggerOnRemove,
-		}: {
-			triggerOnRemove?: boolean;
-		}) => {
-			return new Promise<boolean>((resolve) => {
-				if (uuid && nativeNodeHandle) {
-					LayerBitmapTileModule.removeLayer({
-						nativeNodeHandle,
-						uuid,
-					})
-						.then((uuid: string) => {
-							triggerOnRemove && onRemove
-								? onRemove({ nativeNodeHandle, uuid })
-								: null;
-							resolve(true);
-						})
-						.catch((err: ErrorBase) => {
-							console.log('ERROR', err.userInfo.errorMsg);
-							onError ? onError(err) : null;
-							resolve(false);
-						});
-				}
+			return LayerBitmapTileModule.createLayer({
+				nativeNodeHandle,
+				...(url && { url }),
+				...(alpha && { alpha }), // java side will ensure it is between 0 and 1.
+				...(zoomMin && { zoomMin: Math.round(zoomMin) }),
+				...(zoomMax && { zoomMax: Math.round(zoomMax) }),
+				...(enabledZoomMin && {
+					enabledZoomMin: Math.round(enabledZoomMin),
+				}),
+				...(enabledZoomMax && {
+					enabledZoomMax: Math.round(enabledZoomMax),
+				}),
+				...(cacheSize && { cacheSize: Math.round(cacheSize) }),
+				...(cacheDirBase && { cacheDirBase: cacheDirBase.trim() }),
+				...(cacheDirChild && {
+					cacheDirChild: cacheDirChild.trim(),
+				}),
+			}).then((newUuid) => {
+				triggerOnCreate && onCreate
+					? onCreate({ nativeNodeHandle, uuid: newUuid })
+					: null;
+				triggerOnChange && onChange
+					? onChange({ nativeNodeHandle, uuid: newUuid })
+					: null;
+				return newUuid;
 			});
-		};
-	}, [
-		nativeNodeHandle,
-		uuid,
-		onRemove,
+		},
+		remove: (currentUuid, { triggerOnRemove }) => {
+			if (!nativeNodeHandle) {
+				return Promise.resolve(false);
+			}
+			return LayerBitmapTileModule.removeLayer({
+				nativeNodeHandle,
+				uuid: currentUuid,
+			})
+				.then((removedUuid) => {
+					triggerOnRemove && onRemove
+						? onRemove({ nativeNodeHandle, uuid: removedUuid })
+						: null;
+					return true;
+				})
+				.catch((err: ErrorBase) => {
+					reportNativeError(err, onError);
+					return false;
+				});
+		},
 		onError,
-	]);
+	});
 
-	useEffect(() => {
-		if (uuid === null && nativeNodeHandle) {
-			createLayerRef?.current &&
-				createLayerRef?.current({
-					triggerOnCreate: true,
-					triggerOnChange: false,
-				});
-		}
-		return () => {
-			removeLayerRef?.current &&
-				removeLayerRef?.current({
-					triggerOnRemove: true,
-				});
-		};
-	}, [
-		nativeNodeHandle,
-		uuid,
-	]);
+	useLayerOrder(uuid);
 
 	// enabledZoomMin enabledZoomMax changed.
 	useEffect(() => {
@@ -168,8 +104,7 @@ const LayerBitmapTile = ({
 					enabledZoomMax: Math.round(enabledZoomMax),
 				}),
 			}).catch((err: ErrorBase) => {
-				console.log('ERROR', err.userInfo.errorMsg);
-				onError ? onError(err) : null;
+				reportNativeError(err, onError);
 			});
 		}
 	}, [enabledZoomMin, enabledZoomMax]);
@@ -181,28 +116,23 @@ const LayerBitmapTile = ({
 				uuid,
 				...(alpha && { alpha }), // java side will ensure it is between 0 and 1.
 			}).catch((err: ErrorBase) => {
-				console.log('ERROR', err.userInfo.errorMsg);
-				onError ? onError(err) : null;
+				reportNativeError(err, onError);
 			});
 		}
 	}, [alpha]);
 
+	// There's no native "update in place" for these -- changing any of them requires tearing down
+	// and recreating the layer. triggerRemove resets uuid to null on success, which is what lets
+	// the hook's own mount logic re-trigger creation via triggerCreate below.
 	useEffect(() => {
-		removeLayerRef?.current &&
-			removeLayerRef
-				?.current({
-					triggerOnRemove: false,
-				})
-				.then((success) => {
-					if (success) {
-						setUuid(null);
-						createLayerRef?.current &&
-							createLayerRef?.current({
-								triggerOnCreate: false,
-								triggerOnChange: true,
-							});
-					}
+		triggerRemove({ triggerOnRemove: false }).then((success) => {
+			if (success) {
+				triggerCreate({
+					triggerOnCreate: false,
+					triggerOnChange: true,
 				});
+			}
+		});
 	}, [
 		url,
 		zoomMin,
@@ -210,6 +140,8 @@ const LayerBitmapTile = ({
 		cacheSize,
 		cacheDirBase,
 		cacheDirChild,
+		triggerRemove,
+		triggerCreate,
 	]);
 
 	return null;
