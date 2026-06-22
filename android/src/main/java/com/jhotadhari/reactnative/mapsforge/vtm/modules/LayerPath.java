@@ -251,7 +251,7 @@ public class LayerPath extends NativeLayerPathSpec {
 		if ( ! Utils.rMapHasKey( params, "uuid" ) ) {
 			return;
 		}
-		VectorLayer vectorLayer = (VectorLayer) layerHelper.getLayers().get( params.getString( "uuid" ) );
+		VectorLayer vectorLayer = (VectorLayer) layerHelper.getLayers( nativeNodeHandle ).get( params.getString( "uuid" ) );
 		if ( null == vectorLayer ) {
 			return;
 		}
@@ -301,7 +301,7 @@ public class LayerPath extends NativeLayerPathSpec {
 			if ( null == mapView ) {
 				Utils.promiseReject( promise,"Unable to find mapView" ); return;
 			}
-			VectorLayer vectorLayer = (VectorLayer) layerHelper.getLayers().get( uuid );
+			VectorLayer vectorLayer = (VectorLayer) layerHelper.getLayers( params.getInt( "nativeNodeHandle" ) ).get( uuid );
 			if ( null == vectorLayer ) {
 				Utils.promiseReject( promise,"Layer not found" ); return;
 			}
@@ -358,7 +358,7 @@ public class LayerPath extends NativeLayerPathSpec {
 			if ( null == mapView ) {
 				Utils.promiseReject( promise,"Unable to find mapView" ); return;
 			}
-			VectorLayer vectorLayer = (VectorLayer) layerHelper.getLayers().get( uuid );
+			VectorLayer vectorLayer = (VectorLayer) layerHelper.getLayers( params.getInt( "nativeNodeHandle" ) ).get( uuid );
 			if ( null == vectorLayer ) {
 				Utils.promiseReject( promise,"Layer not found" ); return;
 			}
@@ -392,7 +392,7 @@ public class LayerPath extends NativeLayerPathSpec {
 			if ( null == mapView ) {
 				Utils.promiseReject( promise,"Unable to find mapView" ); return;
 			}
-			VectorLayer vectorLayer = (VectorLayer) layerHelper.getLayers().get( uuid );
+			VectorLayer vectorLayer = (VectorLayer) layerHelper.getLayers( params.getInt( "nativeNodeHandle" ) ).get( uuid );
 			if ( null == vectorLayer ) {
 				Utils.promiseReject( promise,"Layer not found" ); return;
 			}

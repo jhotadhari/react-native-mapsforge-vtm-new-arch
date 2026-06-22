@@ -109,7 +109,7 @@ public class LayerZoomBoundsHelper extends LayerHelper {
 		if ( null == mapView ) { return; }
 
 		removeUpdateListener( nativeNodeHandle );
-		Layer layer = getLayers().get( uuid );
+		Layer layer = getLayers( nativeNodeHandle ).get( uuid );
 		if ( null == layer ) { return; }
 
 		updateListener = new Map.UpdateListener() {

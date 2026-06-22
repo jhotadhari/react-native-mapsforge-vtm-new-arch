@@ -110,7 +110,7 @@ public class LayerMarker extends NativeLayerMarkerSpec {
 		if ( ! Utils.rMapHasKey( params, "markerLayerUuid" ) ) {
 			return;
 		}
-		ItemizedLayer markerLayer = (ItemizedLayer) layerHelper.getLayers().get( params.getString( "markerLayerUuid" ) );
+		ItemizedLayer markerLayer = (ItemizedLayer) layerHelper.getLayers( params.getInt( "nativeNodeHandle" ) ).get( params.getString( "markerLayerUuid" ) );
 		if ( markerLayer == null ) {
 			return;
 		}
@@ -266,7 +266,7 @@ public class LayerMarker extends NativeLayerMarkerSpec {
 		if ( ! Utils.rMapHasKey( params, "markerLayerUuid" ) ) {
 			Utils.promiseReject( promise,"Undefined markerLayerUuid" ); return;
 		}
-		ItemizedLayer markerLayer = (ItemizedLayer) layerHelper.getLayers().get( params.getString( "markerLayerUuid" ) );
+		ItemizedLayer markerLayer = (ItemizedLayer) layerHelper.getLayers( params.getInt( "nativeNodeHandle" ) ).get( params.getString( "markerLayerUuid" ) );
 		if ( markerLayer == null ) {
 			Utils.promiseReject( promise,"Unable to find markerLayer" ); return;
 		}
@@ -329,7 +329,7 @@ public class LayerMarker extends NativeLayerMarkerSpec {
 		if ( null == mapView ) {
 			Utils.promiseReject( promise, "Unable to find mapView" ); return;
 		}
-		ItemizedLayer markerLayer = (ItemizedLayer) layerHelper.getLayers().get( params.getString( "markerLayerUuid" ) );
+		ItemizedLayer markerLayer = (ItemizedLayer) layerHelper.getLayers( params.getInt( "nativeNodeHandle" ) ).get( params.getString( "markerLayerUuid" ) );
 		if ( markerLayer == null ) {
 			Utils.promiseReject( promise, "Unable to find markerLayer" ); return;
 		}
@@ -362,7 +362,7 @@ public class LayerMarker extends NativeLayerMarkerSpec {
 				Utils.promiseReject( promise,"Undefined uuid" ); return;
 			}
 			String uuid = params.getString( "uuid" );
-			ItemizedLayer markerLayer = (ItemizedLayer) layerHelper.getLayers().get( uuid );
+			ItemizedLayer markerLayer = (ItemizedLayer) layerHelper.getLayers( params.getInt( "nativeNodeHandle" ) ).get( uuid );
 			if ( markerLayer == null ) {
 				Utils.promiseReject( promise,"Unable to find markerLayer" ); return;
 			}
@@ -409,7 +409,7 @@ public class LayerMarker extends NativeLayerMarkerSpec {
 			if ( ! Utils.rMapHasKey( params, "markerLayerUuid" ) ) {
 				Utils.promiseReject( promise,"Undefined markerLayerUuid" ); return;
 			}
-			ItemizedLayer markerLayer = (ItemizedLayer) layerHelper.getLayers().get( params.getString( "markerLayerUuid" ) );
+			ItemizedLayer markerLayer = (ItemizedLayer) layerHelper.getLayers( params.getInt( "nativeNodeHandle" ) ).get( params.getString( "markerLayerUuid" ) );
 			if ( markerLayer == null ) {
 				Utils.promiseReject( promise,"Unable to find markerLayer" ); return;
 			}

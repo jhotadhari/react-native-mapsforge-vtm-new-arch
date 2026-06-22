@@ -11,7 +11,7 @@ import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableNativeArray;
 import com.facebook.react.bridge.WritableNativeMap;
 import com.facebook.react.module.annotations.ReactModule;
-import com.jhotadhari.reactnative.mapsforge.vtm.LayerOrderRegistry;
+import com.jhotadhari.reactnative.mapsforge.vtm.LayerHelper;
 import com.jhotadhari.reactnative.mapsforge.vtm.NativeMapContainerSpec;
 import com.jhotadhari.reactnative.mapsforge.vtm.Utils;
 
@@ -103,7 +103,7 @@ public class MapContainer extends NativeMapContainerSpec {
 			ReadableArray layerUuids = params.getArray( "layerUuids" );
 			List<Layer> orderedLayers = new ArrayList<>();
 			for ( int i = 0; i < layerUuids.size(); i++ ) {
-				Layer layer = LayerOrderRegistry.get( nativeNodeHandle, layerUuids.getString( i ) );
+				Layer layer = LayerHelper.getLayer( nativeNodeHandle, layerUuids.getString( i ) );
 				if ( null != layer && mapView.map().layers().contains( layer ) ) {
 					orderedLayers.add( layer );
 				}

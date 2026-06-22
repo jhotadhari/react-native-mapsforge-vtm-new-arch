@@ -11,6 +11,7 @@ import org.oscim.layers.Layer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class LayerHelper {
 
@@ -18,15 +19,25 @@ public class LayerHelper {
 
 	protected final ReactApplicationContext reactContext;
 
-	protected final Map<String, Layer> layers = new HashMap<>();
+	// Shared nativeNodeHandle -> uuid -> Layer registry across all layer-type modules
+	// (LayerMarker, LayerPath, LayerBitmapTile), each of which owns its own LayerHelper
+	// instance. Shared because reordering (MapContainer.reorderLayers) is a whole-map
+	// concern that has to resolve uuids regardless of which module created the layer, since
+	// all layer types share one flat native layer list.
+	private static final Map<Integer, Map<String, Layer>> layersByHandle = new ConcurrentHashMap<>();
 
 	public LayerHelper( ReactContextBaseJavaModule module, ReactApplicationContext reactContext ) {
 		this.module = module;
 		this.reactContext = reactContext;
 	}
 
-	public Map<String, Layer> getLayers() {
-		return layers;
+	public static Layer getLayer( int nativeNodeHandle, String uuid ) {
+		Map<String, Layer> layers = layersByHandle.get( nativeNodeHandle );
+		return null == layers ? null : layers.get( uuid );
+	}
+
+	public Map<String, Layer> getLayers( int nativeNodeHandle ) {
+		return layersByHandle.computeIfAbsent( nativeNodeHandle, k -> new HashMap<>() );
 	}
 
 	public String addLayer( Layer layer, ReadableMap params, String uuid ) {
@@ -41,8 +52,7 @@ public class LayerHelper {
 
 		// Trigger update map.
 		mapView.map().updateMap();
-		layers.put( uuid, layer );
-		LayerOrderRegistry.put( nativeNodeHandle, uuid, layer );
+		getLayers( nativeNodeHandle ).put( uuid, layer );
 
 		return uuid;
 	}
@@ -74,8 +84,7 @@ public class LayerHelper {
 			}
 
 			// Remove layer from layers.
-			layers.remove( uuid );
-			LayerOrderRegistry.remove( nativeNodeHandle, uuid );
+			getLayers( nativeNodeHandle ).remove( uuid );
 
 			// Trigger map update.
 			mapView.map().updateMap();
@@ -97,7 +106,7 @@ public class LayerHelper {
 			return -1;
 		}
 
-		Layer layer = layers.get( uuid );
+		Layer layer = getLayer( nativeNodeHandle, uuid );
 		if ( null == layer ) {
 			return -1;
 		}
