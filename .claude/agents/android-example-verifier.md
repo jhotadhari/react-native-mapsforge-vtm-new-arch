@@ -138,16 +138,22 @@ hyphens, since they're also used as JS export identifiers) before looking anywhe
 
 If a layer needs a local test file (e.g. `.mbtiles`, `.hgt`) pushed onto the device, plain
 `adb push` into `/sdcard/Android/data/<pkg>/files/` or `/sdcard/Download/` is often **not**
-readable by the app via `java.io.File`, even though POSIX permissions on the file look fine. Verify
-with `adb shell run-as jhotadhari.reactnative.mapsforge.vtm.example ls -la <path>` — if that's
-denied, the app's own process is genuinely denied too (run-as reproduces the real sandbox), it's
-not just a flaky check. Fix (already applied once in this repo, check if it's still present before
-redoing it): `android.permission.MANAGE_EXTERNAL_STORAGE` (with `tools:ignore="ScopedStorage"`)
-declared in `example/android/app/src/main/AndroidManifest.xml`, then after installing:
+readable by the app via `java.io.File`, even though POSIX permissions on the file look fine. Fix
+(already applied once in this repo, check if it's still present before redoing it):
+`android.permission.MANAGE_EXTERNAL_STORAGE` (with `tools:ignore="ScopedStorage"`) declared in
+`example/android/app/src/main/AndroidManifest.xml`, then after installing:
 
 ```
 adb -s emulator-5554 shell appops set jhotadhari.reactnative.mapsforge.vtm.example MANAGE_EXTERNAL_STORAGE allow
 ```
+
+**Don't use `adb shell run-as <pkg> ls -la <path>` to verify this took effect** — confirmed during
+`LayerHillshading` verification that `run-as` can falsely report "Permission denied" on a path the
+real app process can actually read fine once `MANAGE_EXTERNAL_STORAGE` is granted (seen on both a
+real device and the emulator). `run-as`'s shell-spawned process doesn't reliably inherit the same
+scoped-storage FUSE view as the real app process. If you need to confirm readability, check the
+app's actual behavior instead (does the feature visibly work, or does a temporary `Log.d` in the
+real native code path confirm the read succeeded) rather than trusting a `run-as ls` result.
 
 ## Reporting back
 
