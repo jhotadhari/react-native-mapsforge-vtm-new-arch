@@ -20,13 +20,22 @@ import org.oscim.layers.Layer;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @ReactModule( name = MapContainer.NAME )
 public class MapContainer extends NativeMapContainerSpec {
 
 	public static final String NAME = "MapContainer";
+
+	// Tracks, per nativeNodeHandle, which Layers were already part of the order as of the last
+	// reorderLayers call -- so a layer that's genuinely new to the tracked set (and so has never
+	// had a chance to schedule its own tile jobs) can be kicked individually, instead of
+	// broadcasting a map-wide clear that would also needlessly flash every other, already-loaded
+	// tile layer on the same map.
+	private final Map<Integer, Set<Layer>> previouslyOrderedLayers = new HashMap<>();
 
 	public MapContainer( ReactApplicationContext reactContext ) {
 		super( reactContext );
@@ -120,8 +129,21 @@ public class MapContainer extends NativeMapContainerSpec {
 			// TileManager without a trigger to (re-)schedule tile jobs -- plain updateMap() only
 			// redraws the current frame. Layers whose own createLayer already called clearMap() once
 			// can have that undone by a reorder racing in right after (e.g. a sibling layer's uuid
-			// resolving moments later), so this needs the same fix.
-			mapView.map().clearMap();
+			// resolving moments later), so this needs the same fix -- but scoped to just the layer(s)
+			// that are actually new here, by calling onMapEvent directly on each rather than
+			// broadcasting org.oscim.map.Map#clearMap() to the whole map: a brand new layer has
+			// nothing rendered yet, so clearing it is free, but clearing an already-loaded sibling
+			// tile layer just to reorder it would visibly flash it for no reason.
+			Set<Layer> previous = previouslyOrderedLayers.computeIfAbsent( nativeNodeHandle, k -> new HashSet<>() );
+			for ( Layer layer : orderedLayers ) {
+				if ( ! previous.contains( layer ) && layer instanceof org.oscim.map.Map.UpdateListener ) {
+					( (org.oscim.map.Map.UpdateListener) layer ).onMapEvent( org.oscim.map.Map.CLEAR_EVENT, mapView.map().getMapPosition() );
+				}
+			}
+			previous.clear();
+			previous.addAll( orderedLayers );
+
+			mapView.map().updateMap();
 
 			promise.resolve( null );
 		} catch ( Exception e ) {
