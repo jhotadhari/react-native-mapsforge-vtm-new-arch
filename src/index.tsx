@@ -22,10 +22,11 @@ import * as LayerMBTilesBitmapTypes from './NativeModules/NativeLayerMBTilesBitm
 import LayerHillshading from './components/LayerHillshading';
 import * as LayerHillshadingTypes from './NativeModules/NativeLayerHillshading';
 
-// import LayerMapsforge from './components/LayerMapsforge';
-// import LayerPathSlopeGradient from './components/LayerPathSlopeGradient';
+import LayerMapsforge from './components/LayerMapsforge';
+import * as LayerMapsforgeTypes from './NativeModules/NativeLayerMapsforge';
+import useRenderStyleOptions from './compose/useRenderStyleOptions';
 
-// import useRenderStyleOptions from './compose/useRenderStyleOptions';
+// import LayerPathSlopeGradient from './components/LayerPathSlopeGradient';
 
 export {
 	MapContainer,
@@ -43,12 +44,11 @@ export {
 	LayerMBTilesBitmapTypes,
 	LayerHillshading,
 	LayerHillshadingTypes,
-
-	// LayerMapsforge,
+	LayerMapsforge,
+	LayerMapsforgeTypes,
+	useRenderStyleOptions,
 
 	// LayerPathSlopeGradient,
-
-	// useRenderStyleOptions,
 };
 
 export type * from './types';

@@ -10,6 +10,7 @@ import com.facebook.react.module.model.ReactModuleInfo;
 import com.facebook.react.module.model.ReactModuleInfoProvider;
 import com.facebook.react.uimanager.ViewManager;
 import com.jhotadhari.reactnative.mapsforge.vtm.modules.LayerHillshading;
+import com.jhotadhari.reactnative.mapsforge.vtm.modules.LayerMapsforge;
 import com.jhotadhari.reactnative.mapsforge.vtm.modules.LayerMarker;
 import com.jhotadhari.reactnative.mapsforge.vtm.modules.LayerMBTilesBitmap;
 import com.jhotadhari.reactnative.mapsforge.vtm.modules.LayerPath;
@@ -57,6 +58,9 @@ public class MapsforgeVtmViewPackage extends BaseReactPackage implements ReactPa
 		}
 		if ( LayerHillshading.NAME.equals( s ) ) {
 			return new LayerHillshading( reactApplicationContext );
+		}
+		if ( LayerMapsforge.NAME.equals( s ) ) {
+			return new LayerMapsforge( reactApplicationContext );
 		}
 		return null;
 	}
@@ -128,6 +132,14 @@ public class MapsforgeVtmViewPackage extends BaseReactPackage implements ReactPa
 				map.put( LayerHillshading.NAME, new ReactModuleInfo(
 					LayerHillshading.NAME,			// name
 					LayerHillshading.NAME,			// className
+					false,							// canOverrideExistingModule
+					false,							// needsEagerInit
+					false,							// isCxxModule
+					true							// isTurboModule
+				) );
+				map.put( LayerMapsforge.NAME, new ReactModuleInfo(
+					LayerMapsforge.NAME,			// name
+					LayerMapsforge.NAME,			// className
 					false,							// canOverrideExistingModule
 					false,							// needsEagerInit
 					false,							// isCxxModule

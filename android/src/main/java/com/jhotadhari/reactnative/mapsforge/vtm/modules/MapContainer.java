@@ -116,7 +116,12 @@ public class MapContainer extends NativeMapContainerSpec {
 				mapView.map().layers().add( layer );
 			}
 
-			mapView.map().updateMap();
+			// Removing/re-adding a tile-based layer (same as LayerHelper.addLayer) leaves its
+			// TileManager without a trigger to (re-)schedule tile jobs -- plain updateMap() only
+			// redraws the current frame. Layers whose own createLayer already called clearMap() once
+			// can have that undone by a reorder racing in right after (e.g. a sibling layer's uuid
+			// resolving moments later), so this needs the same fix.
+			mapView.map().clearMap();
 
 			promise.resolve( null );
 		} catch ( Exception e ) {
