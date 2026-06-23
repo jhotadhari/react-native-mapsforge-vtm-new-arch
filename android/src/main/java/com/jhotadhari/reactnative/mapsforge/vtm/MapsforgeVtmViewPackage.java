@@ -10,6 +10,7 @@ import com.facebook.react.module.model.ReactModuleInfo;
 import com.facebook.react.module.model.ReactModuleInfoProvider;
 import com.facebook.react.uimanager.ViewManager;
 import com.jhotadhari.reactnative.mapsforge.vtm.modules.LayerMarker;
+import com.jhotadhari.reactnative.mapsforge.vtm.modules.LayerMBTilesBitmap;
 import com.jhotadhari.reactnative.mapsforge.vtm.modules.LayerPath;
 import com.jhotadhari.reactnative.mapsforge.vtm.modules.LayerScalebar;
 import com.jhotadhari.reactnative.mapsforge.vtm.modules.MapContainer;
@@ -49,6 +50,9 @@ public class MapsforgeVtmViewPackage extends BaseReactPackage implements ReactPa
 		}
 		if ( LayerScalebar.NAME.equals( s ) ) {
 			return new LayerScalebar( reactApplicationContext );
+		}
+		if ( LayerMBTilesBitmap.NAME.equals( s ) ) {
+			return new LayerMBTilesBitmap( reactApplicationContext );
 		}
 		return null;
 	}
@@ -104,6 +108,14 @@ public class MapsforgeVtmViewPackage extends BaseReactPackage implements ReactPa
 				map.put( LayerScalebar.NAME, new ReactModuleInfo(
 					LayerScalebar.NAME,				// name
 					LayerScalebar.NAME,				// className
+					false,							// canOverrideExistingModule
+					false,							// needsEagerInit
+					false,							// isCxxModule
+					true							// isTurboModule
+				) );
+				map.put( LayerMBTilesBitmap.NAME, new ReactModuleInfo(
+					LayerMBTilesBitmap.NAME,		// name
+					LayerMBTilesBitmap.NAME,		// className
 					false,							// canOverrideExistingModule
 					false,							// needsEagerInit
 					false,							// isCxxModule

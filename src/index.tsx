@@ -16,9 +16,11 @@ import * as LayerPathTypes from './NativeModules/NativeLayerPath';
 import LayerScalebar from './components/LayerScalebar';
 import * as LayerScalebarTypes from './NativeModules/NativeLayerScalebar';
 
+import LayerMBTilesBitmap from './components/LayerMBTilesBitmap';
+import * as LayerMBTilesBitmapTypes from './NativeModules/NativeLayerMBTilesBitmap';
+
 // import LayerMapsforge from './components/LayerMapsforge';
 // import LayerHillshading from './components/LayerHillshading';
-// import LayerMBTilesBitmap from './components/LayerMBTilesBitmap';
 // import LayerPathSlopeGradient from './components/LayerPathSlopeGradient';
 
 // import useRenderStyleOptions from './compose/useRenderStyleOptions';
@@ -35,10 +37,11 @@ export {
 	LayerPathTypes,
 	LayerScalebar,
 	LayerScalebarTypes,
+	LayerMBTilesBitmap,
+	LayerMBTilesBitmapTypes,
 
 	// LayerMapsforge,
 	// LayerHillshading,
-	// LayerMBTilesBitmap,
 
 	// LayerPathSlopeGradient,
 
