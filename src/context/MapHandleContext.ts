@@ -34,30 +34,49 @@ export const createLayerOrderRegistry = (): LayerOrderRegistry => {
 	const order: symbol[] = [];
 	const uuids = new Map<symbol, string>();
 	let lastAppliedUuids: string[] = [];
+
+	// Many sibling layers can each resolve their own uuid within milliseconds of one
+	// another (e.g. a burst of layers mounting together) -- without batching, every single
+	// resolution would fire its own native reorderLayers call. Coalescing into one
+	// macrotask flush collapses a burst into a single native call carrying the final order,
+	// instead of one call per resolved uuid.
+	let flushScheduled = false;
+	let pendingNativeNodeHandle: null | number = null;
+	const flush = () => {
+		flushScheduled = false;
+		const nativeNodeHandle = pendingNativeNodeHandle;
+		if (!nativeNodeHandle) {
+			return;
+		}
+		const orderedUuids = order
+			.map((id) => uuids.get(id))
+			.filter((uuid): uuid is string => !!uuid);
+		const unchanged =
+			orderedUuids.length === lastAppliedUuids.length &&
+			orderedUuids.every((uuid, i) => uuid === lastAppliedUuids[i]);
+		if (unchanged) {
+			return;
+		}
+		lastAppliedUuids = orderedUuids;
+		NativeMapContainer.reorderLayers({
+			nativeNodeHandle,
+			layerUuids: orderedUuids,
+		}).catch((err) => {
+			console.log('ERROR', err);
+		});
+	};
+
 	return {
 		order,
 		uuids,
 		cursor: undefined,
 		scheduleSync: (nativeNodeHandle) => {
-			if (!nativeNodeHandle) {
+			pendingNativeNodeHandle = nativeNodeHandle;
+			if (flushScheduled) {
 				return;
 			}
-			const orderedUuids = order
-				.map((id) => uuids.get(id))
-				.filter((uuid): uuid is string => !!uuid);
-			const unchanged =
-				orderedUuids.length === lastAppliedUuids.length &&
-				orderedUuids.every((uuid, i) => uuid === lastAppliedUuids[i]);
-			if (unchanged) {
-				return;
-			}
-			lastAppliedUuids = orderedUuids;
-			NativeMapContainer.reorderLayers({
-				nativeNodeHandle,
-				layerUuids: orderedUuids,
-			}).catch((err) => {
-				console.log('ERROR', err);
-			});
+			flushScheduled = true;
+			setTimeout(flush, 0);
 		},
 	};
 };
